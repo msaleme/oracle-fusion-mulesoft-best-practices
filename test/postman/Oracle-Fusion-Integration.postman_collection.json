@@ -1,0 +1,575 @@
+{
+  "info": {
+    "name": "Oracle Fusion Integration",
+    "description": "Comprehensive Postman collection for testing Oracle Fusion + MuleSoft integrations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get OAuth Token - Password Grant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.collectionVariables.set(\"access_token\", jsonData.access_token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "testuser",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "testpass",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "mulesoft_client",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/oauth/token",
+              "host": ["{{base_url}}"],
+              "path": ["oauth", "token"]
+            }
+          }
+        },
+        {
+          "name": "Get OAuth Token - Client Credentials",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.collectionVariables.set(\"access_token\", jsonData.access_token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "test_client",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "test_secret",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/oauth/token",
+              "host": ["{{base_url}}"],
+              "path": ["oauth", "token"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vendors",
+      "item": [
+        {
+          "name": "Get All Vendors",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has items array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('items');",
+                  "    pm.expect(jsonData.items).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/suppliers?limit=25&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "suppliers"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "25"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Vendors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/suppliers?q=Tech",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "suppliers"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Tech"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Vendor by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/suppliers/300000001428298",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "suppliers", "300000001428298"]
+            }
+          }
+        },
+        {
+          "name": "Create New Vendor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has VendorId\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('VendorId');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"VendorNumber\": \"SUP-2001\",\n  \"VendorName\": \"Test Vendor Corp\",\n  \"VendorType\": \"STANDARD\",\n  \"TaxOrganizationType\": \"CORPORATION\",\n  \"StartDateActive\": \"2024-01-01\",\n  \"PaymentPriority\": 5,\n  \"PayGroup\": \"STANDARD\",\n  \"PaymentCurrency\": \"USD\",\n  \"PaymentTerms\": \"NET30\",\n  \"OneTimeVendor\": false,\n  \"TaxRegistrationNumber\": \"99-1234567\",\n  \"TaxpayerIdentificationNumber\": \"991234567\",\n  \"Sites\": [\n    {\n      \"VendorSiteCode\": \"MAIN-001\",\n      \"VendorSiteName\": \"Main Office\",\n      \"AddressLine1\": \"123 Test Street\",\n      \"City\": \"Test City\",\n      \"State\": \"CA\",\n      \"PostalCode\": \"90210\",\n      \"Country\": \"US\",\n      \"PhoneAreaCode\": \"555\",\n      \"PhoneNumber\": \"123-4567\",\n      \"EmailAddress\": \"ap@testvendor.com\",\n      \"PurchasingSiteFlag\": true,\n      \"PaySiteFlag\": true,\n      \"PaymentMethod\": \"CHECK\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/suppliers",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "suppliers"]
+            }
+          }
+        },
+        {
+          "name": "Update Vendor",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"PaymentTerms\": \"NET45\",\n  \"PaymentPriority\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/suppliers/300000001428298",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "suppliers", "300000001428298"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "Get All Invoices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/invoices?limit=25&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "invoices"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "25"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Invoices with Lines",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/invoices?expand=Lines",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "invoices"],
+              "query": [
+                {
+                  "key": "expand",
+                  "value": "Lines"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Invoice by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/invoices/300000001429001",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "invoices", "300000001429001"]
+            }
+          }
+        },
+        {
+          "name": "Create New Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"InvoiceNumber\": \"INV-TEST-001\",\n  \"InvoiceDate\": \"2024-03-20\",\n  \"InvoiceAmount\": 5000.00,\n  \"InvoiceCurrency\": \"USD\",\n  \"PaymentCurrency\": \"USD\",\n  \"InvoiceType\": \"STANDARD\",\n  \"Description\": \"Test Invoice\",\n  \"Source\": \"MANUAL\",\n  \"VendorId\": 300000001428298,\n  \"VendorNumber\": \"SUP-1002\",\n  \"VendorSiteId\": 300000001428299,\n  \"PaymentTerms\": \"NET30\",\n  \"PaymentTermsDate\": \"2024-04-19\",\n  \"PaymentMethod\": \"CHECK\",\n  \"PayGroup\": \"STANDARD\",\n  \"LegalEntity\": \"Acme US Operations\",\n  \"BusinessUnit\": \"IT Services BU\",\n  \"AccountingDate\": \"2024-03-20\",\n  \"GlDate\": \"2024-03-20\",\n  \"Lines\": [\n    {\n      \"LineNumber\": 1,\n      \"LineType\": \"ITEM\",\n      \"LineAmount\": 5000.00,\n      \"Description\": \"Professional Services\",\n      \"AccountingDate\": \"2024-03-20\",\n      \"Distributions\": [\n        {\n          \"DistributionLineNumber\": 1,\n          \"DistributionAmount\": 5000.00,\n          \"AccountingDate\": \"2024-03-20\",\n          \"DistributionCombination\": \"01-520-6110-0000-000\"\n        }\n      ]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/invoices",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "invoices"]
+            }
+          }
+        },
+        {
+          "name": "Validate Invoice",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/invoices/300000001429001/action/validate",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "invoices", "300000001429001", "action", "validate"]
+            }
+          }
+        },
+        {
+          "name": "Approve Invoice",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/invoices/300000001429001/action/approve",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "invoices", "300000001429001", "action", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Bulk Create Invoices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoices\": [\n    {\n      \"InvoiceNumber\": \"BULK-001\",\n      \"InvoiceDate\": \"2024-03-21\",\n      \"InvoiceAmount\": 1000.00,\n      \"InvoiceCurrency\": \"USD\",\n      \"InvoiceType\": \"STANDARD\",\n      \"VendorId\": 300000001428298,\n      \"VendorSiteId\": 300000001428299,\n      \"Lines\": [\n        {\n          \"LineNumber\": 1,\n          \"LineType\": \"ITEM\",\n          \"LineAmount\": 1000.00,\n          \"Description\": \"Service Line 1\"\n        }\n      ]\n    },\n    {\n      \"InvoiceNumber\": \"BULK-002\",\n      \"InvoiceDate\": \"2024-03-21\",\n      \"InvoiceAmount\": 2000.00,\n      \"InvoiceCurrency\": \"USD\",\n      \"InvoiceType\": \"STANDARD\",\n      \"VendorId\": 300000001428303,\n      \"VendorSiteId\": 300000001428304,\n      \"Lines\": [\n        {\n          \"LineNumber\": 1,\n          \"LineType\": \"ITEM\",\n          \"LineAmount\": 2000.00,\n          \"Description\": \"Office Supplies\"\n        }\n      ]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/invoices/bulkProcess",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "invoices", "bulkProcess"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Purchase Orders",
+      "item": [
+        {
+          "name": "Get All Purchase Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/purchaseOrders",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "purchaseOrders"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Get Available Reports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/xmlpserver/services/v2/ReportService",
+              "host": ["{{base_url}}"],
+              "path": ["xmlpserver", "services", "v2", "ReportService"]
+            }
+          }
+        },
+        {
+          "name": "Run Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportPath\": \"/Custom/Finance/APAging\",\n  \"reportParameters\": {\n    \"reportType\": \"AP_AGING\",\n    \"businessUnit\": \"ALL\",\n    \"asOfDate\": \"2024-03-31\",\n    \"currency\": \"USD\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/xmlpserver/services/v2/ReportService/runReport",
+              "host": ["{{base_url}}"],
+              "path": ["xmlpserver", "services", "v2", "ReportService", "runReport"]
+            }
+          }
+        },
+        {
+          "name": "Get Report Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/xmlpserver/services/v2/ReportService/getReportData/RPT-2024-002",
+              "host": ["{{base_url}}"],
+              "path": ["xmlpserver", "services", "v2", "ReportService", "getReportData", "RPT-2024-002"]
+            }
+          }
+        },
+        {
+          "name": "Get OTBI Catalog",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/xmlpserver/services/v2/CatalogService",
+              "host": ["{{base_url}}"],
+              "path": ["xmlpserver", "services", "v2", "CatalogService"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ERP Integrations",
+      "item": [
+        {
+          "name": "Submit ESS Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jobName\": \"ImportAPInvoices\",\n  \"parameters\": {\n    \"ImportSource\": \"MULESOFT\",\n    \"ImportRequestId\": \"REQ-12345\",\n    \"ValidationLevel\": \"FULL\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/erpintegrations",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "erpintegrations"]
+            }
+          }
+        },
+        {
+          "name": "Check Job Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fscmRestApi/resources/11.13.18.05/erpintegrations/123456",
+              "host": ["{{base_url}}"],
+              "path": ["fscmRestApi", "resources", "11.13.18.05", "erpintegrations", "123456"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health & Monitoring",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

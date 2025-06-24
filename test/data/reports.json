@@ -1,0 +1,575 @@
+{
+  "reports": [
+    {
+      "reportId": "RPT-2024-001",
+      "reportName": "Monthly Financial Summary",
+      "reportType": "FINANCIAL_SUMMARY",
+      "period": "2024-03",
+      "generatedDate": "2024-04-01T00:00:00Z",
+      "format": "JSON",
+      "status": "COMPLETED",
+      "parameters": {
+        "ledger": "US_PRIMARY",
+        "periodName": "MAR-24",
+        "currency": "USD",
+        "includeAdjustments": true,
+        "includeEncumbrances": false
+      },
+      "data": {
+        "summary": {
+          "totalRevenue": 2850000.00,
+          "totalExpenses": 1920000.00,
+          "netIncome": 930000.00,
+          "totalAssets": 15600000.00,
+          "totalLiabilities": 4200000.00,
+          "totalEquity": 11400000.00
+        },
+        "revenues": [
+          {
+            "account": "4000",
+            "accountName": "Product Revenue",
+            "amount": 1850000.00,
+            "ytdAmount": 5200000.00,
+            "budgetAmount": 1800000.00,
+            "variance": 50000.00,
+            "variancePercent": 2.78
+          },
+          {
+            "account": "4100",
+            "accountName": "Service Revenue",
+            "amount": 1000000.00,
+            "ytdAmount": 2900000.00,
+            "budgetAmount": 950000.00,
+            "variance": 50000.00,
+            "variancePercent": 5.26
+          }
+        ],
+        "expenses": [
+          {
+            "account": "5000",
+            "accountName": "Cost of Goods Sold",
+            "amount": 920000.00,
+            "ytdAmount": 2600000.00,
+            "budgetAmount": 900000.00,
+            "variance": -20000.00,
+            "variancePercent": -2.22
+          },
+          {
+            "account": "6000",
+            "accountName": "Operating Expenses",
+            "amount": 750000.00,
+            "ytdAmount": 2100000.00,
+            "budgetAmount": 780000.00,
+            "variance": 30000.00,
+            "variancePercent": 3.85
+          },
+          {
+            "account": "6100",
+            "accountName": "Salaries and Benefits",
+            "amount": 550000.00,
+            "ytdAmount": 1650000.00,
+            "budgetAmount": 560000.00,
+            "variance": 10000.00,
+            "variancePercent": 1.79
+          },
+          {
+            "account": "6200",
+            "accountName": "Administrative Expenses",
+            "amount": 200000.00,
+            "ytdAmount": 450000.00,
+            "budgetAmount": 220000.00,
+            "variance": 20000.00,
+            "variancePercent": 9.09
+          }
+        ],
+        "balanceSheet": {
+          "assets": {
+            "current": [
+              {
+                "account": "1000",
+                "accountName": "Cash and Cash Equivalents",
+                "amount": 3200000.00,
+                "priorPeriod": 2900000.00,
+                "change": 300000.00
+              },
+              {
+                "account": "1200",
+                "accountName": "Accounts Receivable",
+                "amount": 2100000.00,
+                "priorPeriod": 2300000.00,
+                "change": -200000.00
+              },
+              {
+                "account": "1300",
+                "accountName": "Inventory",
+                "amount": 1800000.00,
+                "priorPeriod": 1750000.00,
+                "change": 50000.00
+              }
+            ],
+            "nonCurrent": [
+              {
+                "account": "1500",
+                "accountName": "Property, Plant & Equipment",
+                "amount": 8500000.00,
+                "priorPeriod": 8300000.00,
+                "change": 200000.00
+              }
+            ]
+          },
+          "liabilities": {
+            "current": [
+              {
+                "account": "2000",
+                "accountName": "Accounts Payable",
+                "amount": 1200000.00,
+                "priorPeriod": 1100000.00,
+                "change": 100000.00
+              },
+              {
+                "account": "2100",
+                "accountName": "Accrued Expenses",
+                "amount": 500000.00,
+                "priorPeriod": 450000.00,
+                "change": 50000.00
+              }
+            ],
+            "nonCurrent": [
+              {
+                "account": "2500",
+                "accountName": "Long-term Debt",
+                "amount": 2500000.00,
+                "priorPeriod": 2600000.00,
+                "change": -100000.00
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "reportId": "RPT-2024-002",
+      "reportName": "AP Aging Report",
+      "reportType": "AP_AGING",
+      "period": "2024-03-31",
+      "generatedDate": "2024-04-01T06:00:00Z",
+      "format": "JSON",
+      "status": "COMPLETED",
+      "parameters": {
+        "businessUnit": "ALL",
+        "supplier": "ALL",
+        "currency": "USD",
+        "asOfDate": "2024-03-31",
+        "includeZeroBalance": false
+      },
+      "data": {
+        "summary": {
+          "totalOutstanding": 342750.00,
+          "current": 275000.00,
+          "days1to30": 45250.00,
+          "days31to60": 15000.00,
+          "days61to90": 7500.00,
+          "over90Days": 0.00
+        },
+        "details": [
+          {
+            "vendorNumber": "SUP-1001",
+            "vendorName": "Acme Corporation",
+            "totalDue": 125000.00,
+            "current": 125000.00,
+            "days1to30": 0.00,
+            "days31to60": 0.00,
+            "days61to90": 0.00,
+            "over90Days": 0.00,
+            "invoices": [
+              {
+                "invoiceNumber": "INV-2024-010",
+                "invoiceDate": "2024-03-25",
+                "dueDate": "2024-04-24",
+                "amount": 125000.00,
+                "remainingAmount": 125000.00,
+                "daysOutstanding": 6
+              }
+            ]
+          },
+          {
+            "vendorNumber": "SUP-1002",
+            "vendorName": "Global Tech Solutions Ltd",
+            "totalDue": 175250.00,
+            "current": 125000.00,
+            "days1to30": 35250.00,
+            "days31to60": 15000.00,
+            "days61to90": 0.00,
+            "over90Days": 0.00,
+            "invoices": [
+              {
+                "invoiceNumber": "INV-2024-001",
+                "invoiceDate": "2024-03-01",
+                "dueDate": "2024-04-15",
+                "amount": 15750.00,
+                "remainingAmount": 15750.00,
+                "daysOutstanding": 30
+              },
+              {
+                "invoiceNumber": "INV-2024-008",
+                "invoiceDate": "2024-02-15",
+                "dueDate": "2024-04-01",
+                "amount": 19500.00,
+                "remainingAmount": 19500.00,
+                "daysOutstanding": 44
+              },
+              {
+                "invoiceNumber": "INV-2024-006",
+                "invoiceDate": "2024-01-30",
+                "dueDate": "2024-03-15",
+                "amount": 15000.00,
+                "remainingAmount": 15000.00,
+                "daysOutstanding": 60
+              },
+              {
+                "invoiceNumber": "INV-2024-011",
+                "invoiceDate": "2024-03-28",
+                "dueDate": "2024-05-12",
+                "amount": 125000.00,
+                "remainingAmount": 125000.00,
+                "daysOutstanding": 3
+              }
+            ]
+          },
+          {
+            "vendorNumber": "SUP-1003",
+            "vendorName": "Office Supplies Plus Inc",
+            "totalDue": 42500.00,
+            "current": 25000.00,
+            "days1to30": 10000.00,
+            "days31to60": 0.00,
+            "days61to90": 7500.00,
+            "over90Days": 0.00,
+            "invoices": [
+              {
+                "invoiceNumber": "INV-2024-002",
+                "invoiceDate": "2024-03-15",
+                "dueDate": "2024-04-14",
+                "amount": 3542.50,
+                "remainingAmount": 3542.50,
+                "daysOutstanding": 16
+              },
+              {
+                "invoiceNumber": "CM-2024-001",
+                "invoiceDate": "2024-03-20",
+                "dueDate": "2024-03-20",
+                "amount": -500.00,
+                "remainingAmount": -500.00,
+                "daysOutstanding": 11
+              },
+              {
+                "invoiceNumber": "INV-2024-007",
+                "invoiceDate": "2024-03-05",
+                "dueDate": "2024-04-04",
+                "amount": 6457.50,
+                "remainingAmount": 6457.50,
+                "daysOutstanding": 26
+              },
+              {
+                "invoiceNumber": "INV-2024-005",
+                "invoiceDate": "2024-01-10",
+                "dueDate": "2024-02-09",
+                "amount": 7500.00,
+                "remainingAmount": 7500.00,
+                "daysOutstanding": 80
+              },
+              {
+                "invoiceNumber": "INV-2024-012",
+                "invoiceDate": "2024-03-30",
+                "dueDate": "2024-04-29",
+                "amount": 25000.00,
+                "remainingAmount": 25000.00,
+                "daysOutstanding": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "reportId": "RPT-2024-003",
+      "reportName": "Budget vs Actual Analysis",
+      "reportType": "BUDGET_ANALYSIS",
+      "period": "2024-Q1",
+      "generatedDate": "2024-04-05T12:00:00Z",
+      "format": "JSON",
+      "status": "COMPLETED",
+      "parameters": {
+        "fiscalYear": "2024",
+        "quarter": "Q1",
+        "ledger": "US_PRIMARY",
+        "currency": "USD",
+        "level": "DEPARTMENT"
+      },
+      "data": {
+        "summary": {
+          "totalBudget": 5850000.00,
+          "totalActual": 5720000.00,
+          "variance": 130000.00,
+          "variancePercent": 2.22,
+          "utilizationRate": 97.78
+        },
+        "departments": [
+          {
+            "departmentCode": "100",
+            "departmentName": "Administration",
+            "budget": 750000.00,
+            "actual": 720000.00,
+            "variance": 30000.00,
+            "variancePercent": 4.00,
+            "categories": [
+              {
+                "category": "Salaries",
+                "budget": 500000.00,
+                "actual": 490000.00,
+                "variance": 10000.00
+              },
+              {
+                "category": "Office Supplies",
+                "budget": 50000.00,
+                "actual": 45000.00,
+                "variance": 5000.00
+              },
+              {
+                "category": "Travel",
+                "budget": 100000.00,
+                "actual": 95000.00,
+                "variance": 5000.00
+              },
+              {
+                "category": "Other",
+                "budget": 100000.00,
+                "actual": 90000.00,
+                "variance": 10000.00
+              }
+            ]
+          },
+          {
+            "departmentCode": "200",
+            "departmentName": "Sales & Marketing",
+            "budget": 1500000.00,
+            "actual": 1550000.00,
+            "variance": -50000.00,
+            "variancePercent": -3.33,
+            "categories": [
+              {
+                "category": "Salaries",
+                "budget": 800000.00,
+                "actual": 820000.00,
+                "variance": -20000.00
+              },
+              {
+                "category": "Advertising",
+                "budget": 400000.00,
+                "actual": 420000.00,
+                "variance": -20000.00
+              },
+              {
+                "category": "Events",
+                "budget": 200000.00,
+                "actual": 210000.00,
+                "variance": -10000.00
+              },
+              {
+                "category": "Other",
+                "budget": 100000.00,
+                "actual": 100000.00,
+                "variance": 0.00
+              }
+            ]
+          },
+          {
+            "departmentCode": "300",
+            "departmentName": "Operations",
+            "budget": 2000000.00,
+            "actual": 1900000.00,
+            "variance": 100000.00,
+            "variancePercent": 5.00,
+            "categories": [
+              {
+                "category": "Salaries",
+                "budget": 1200000.00,
+                "actual": 1150000.00,
+                "variance": 50000.00
+              },
+              {
+                "category": "Equipment",
+                "budget": 300000.00,
+                "actual": 280000.00,
+                "variance": 20000.00
+              },
+              {
+                "category": "Maintenance",
+                "budget": 200000.00,
+                "actual": 190000.00,
+                "variance": 10000.00
+              },
+              {
+                "category": "Supplies",
+                "budget": 300000.00,
+                "actual": 280000.00,
+                "variance": 20000.00
+              }
+            ]
+          },
+          {
+            "departmentCode": "400",
+            "departmentName": "IT Services",
+            "budget": 1600000.00,
+            "actual": 1550000.00,
+            "variance": 50000.00,
+            "variancePercent": 3.13,
+            "categories": [
+              {
+                "category": "Salaries",
+                "budget": 1000000.00,
+                "actual": 980000.00,
+                "variance": 20000.00
+              },
+              {
+                "category": "Software Licenses",
+                "budget": 400000.00,
+                "actual": 390000.00,
+                "variance": 10000.00
+              },
+              {
+                "category": "Hardware",
+                "budget": 100000.00,
+                "actual": 95000.00,
+                "variance": 5000.00
+              },
+              {
+                "category": "Consulting",
+                "budget": 100000.00,
+                "actual": 85000.00,
+                "variance": 15000.00
+              }
+            ]
+          }
+        ],
+        "trends": {
+          "monthlyActuals": [
+            {
+              "month": "2024-01",
+              "budget": 1950000.00,
+              "actual": 1850000.00,
+              "variance": 100000.00
+            },
+            {
+              "month": "2024-02",
+              "budget": 1950000.00,
+              "actual": 1920000.00,
+              "variance": 30000.00
+            },
+            {
+              "month": "2024-03",
+              "budget": 1950000.00,
+              "actual": 1950000.00,
+              "variance": 0.00
+            }
+          ]
+        }
+      }
+    },
+    {
+      "reportId": "RPT-2024-004",
+      "reportName": "Cash Flow Statement",
+      "reportType": "CASH_FLOW",
+      "period": "2024-03",
+      "generatedDate": "2024-04-02T08:00:00Z",
+      "format": "JSON",
+      "status": "COMPLETED",
+      "parameters": {
+        "ledger": "US_PRIMARY",
+        "periodName": "MAR-24",
+        "currency": "USD",
+        "method": "INDIRECT"
+      },
+      "data": {
+        "summary": {
+          "beginningCash": 2900000.00,
+          "endingCash": 3200000.00,
+          "netChange": 300000.00,
+          "operatingActivities": 450000.00,
+          "investingActivities": -200000.00,
+          "financingActivities": 50000.00
+        },
+        "operatingActivities": {
+          "netIncome": 930000.00,
+          "adjustments": [
+            {
+              "item": "Depreciation & Amortization",
+              "amount": 150000.00
+            },
+            {
+              "item": "Changes in Accounts Receivable",
+              "amount": 200000.00
+            },
+            {
+              "item": "Changes in Inventory",
+              "amount": -50000.00
+            },
+            {
+              "item": "Changes in Accounts Payable",
+              "amount": -100000.00
+            },
+            {
+              "item": "Changes in Accrued Expenses",
+              "amount": -50000.00
+            },
+            {
+              "item": "Other Operating Activities",
+              "amount": -630000.00
+            }
+          ],
+          "total": 450000.00
+        },
+        "investingActivities": {
+          "items": [
+            {
+              "item": "Purchase of Equipment",
+              "amount": -250000.00
+            },
+            {
+              "item": "Sale of Assets",
+              "amount": 50000.00
+            }
+          ],
+          "total": -200000.00
+        },
+        "financingActivities": {
+          "items": [
+            {
+              "item": "Proceeds from Borrowing",
+              "amount": 200000.00
+            },
+            {
+              "item": "Repayment of Debt",
+              "amount": -300000.00
+            },
+            {
+              "item": "Dividends Paid",
+              "amount": -150000.00
+            },
+            {
+              "item": "Stock Issuance",
+              "amount": 300000.00
+            }
+          ],
+          "total": 50000.00
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "totalReports": 4,
+    "exportDate": "2024-04-06T10:00:00Z",
+    "exportedBy": "EPM_INTEGRATION",
+    "version": "1.0"
+  }
+}

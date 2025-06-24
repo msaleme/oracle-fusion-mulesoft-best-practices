@@ -1,0 +1,30 @@
+{
+  "name": "oracle-fusion-mock-server",
+  "version": "1.0.0",
+  "description": "Mock Oracle Fusion REST API server for testing MuleSoft integrations",
+  "main": "oracle-fusion-mock.js",
+  "scripts": {
+    "start": "node oracle-fusion-mock.js",
+    "dev": "nodemon oracle-fusion-mock.js"
+  },
+  "keywords": [
+    "oracle",
+    "fusion",
+    "mock",
+    "api",
+    "testing"
+  ],
+  "author": "Oracle Fusion Integration Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "morgan": "^1.10.0",
+    "jsonwebtoken": "^9.0.2",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
