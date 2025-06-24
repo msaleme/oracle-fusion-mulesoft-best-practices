@@ -9,7 +9,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = 'mock-oracle-fusion-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-here';
 
 // Load test data
 const vendorsData = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/vendors.json'), 'utf8'));
@@ -52,7 +52,7 @@ app.post('/oauth/token', (req, res) => {
   const { grant_type, username, password, client_id, client_secret } = req.body;
 
   // Mock validation
-  if (grant_type === 'password' && username === 'testuser' && password === 'testpass') {
+  if (grant_type === 'password' && username === process.env.TEST_USERNAME && password === process.env.TEST_PASSWORD) {
     const token = jwt.sign({ username, client_id }, JWT_SECRET, { expiresIn: '1h' });
     res.json({
       access_token: token,
@@ -60,7 +60,7 @@ app.post('/oauth/token', (req, res) => {
       expires_in: 3600,
       scope: 'read write'
     });
-  } else if (grant_type === 'client_credentials' && client_id === 'test_client' && client_secret === 'test_secret') {
+  } else if (grant_type === 'client_credentials' && client_id === process.env.TEST_CLIENT_ID && client_secret === process.env.TEST_CLIENT_SECRET) {
     const token = jwt.sign({ client_id }, JWT_SECRET, { expiresIn: '1h' });
     res.json({
       access_token: token,
@@ -481,8 +481,8 @@ app.listen(PORT, () => {
   console.log(`Oracle Fusion Mock Server running on http://localhost:${PORT}`);
   console.log(`Health check available at http://localhost:${PORT}/health`);
   console.log('\nAuthentication credentials:');
-  console.log('  Password Grant: username=testuser, password=testpass');
-  console.log('  Client Credentials: client_id=test_client, client_secret=test_secret');
+  console.log('  Password Grant: username=' + (process.env.TEST_USERNAME || 'set_TEST_USERNAME_env_var') + ', password=' + (process.env.TEST_PASSWORD || 'set_TEST_PASSWORD_env_var'));
+  console.log('  Client Credentials: client_id=' + (process.env.TEST_CLIENT_ID || 'set_TEST_CLIENT_ID_env_var') + ', client_secret=' + (process.env.TEST_CLIENT_SECRET || 'set_TEST_CLIENT_SECRET_env_var'));
 });
 
 module.exports = app;

@@ -5,8 +5,8 @@
 oracle:
   fusion:
     base:
-      url: "https://dev-instance.oraclecloud.com"
-      host: "dev-instance.oraclecloud.com"
+      url: "https://your-oracle-instance.oraclecloud.com"
+      host: "your-oracle-instance.oraclecloud.com"
       port: "443"
     
     # ERP Configuration
@@ -21,9 +21,9 @@ oracle:
       
     # Authentication Configuration
     auth:
-      host: "dev-instance.oraclecloud.com"
+      host: "your-oracle-instance.oraclecloud.com"
       port: "443"
-      username: "integration_user_dev"
+      username: "your-integration-user"
       password: "${secure::oracle.fusion.auth.password}"
       client:
         id: "${secure::oracle.fusion.auth.client.id}"
@@ -39,12 +39,12 @@ oracle:
 azure:
   ad:
     tenant:
-      id: "your-tenant-id-dev"
+      id: "${azure.tenant.id}"
     client:
-      id: "your-client-id-dev"
+      id: "${azure.client.id}"
       secret: "${secure::azure.ad.client.secret}"
     authority: "https://login.microsoftonline.com/"
-    scope: "https://dev-instance.oraclecloud.com/.default"
+    scope: "https://your-oracle-instance.oraclecloud.com/.default"
 
 # HTTP Configuration
 http:

@@ -22,6 +22,7 @@ This repository provides enterprise architects, integration developers, and tech
 ### Documentation
 - 📘 [Comprehensive Best Practices Guide](./oracle-fusion-mulesoft-best-practices.md) - Complete integration blueprint
 - 🧪 [Testing Guide](./TESTING.md) - Detailed testing strategies and scenarios
+- 🔒 [Security Guidelines](./SECURITY.md) - Enterprise security best practices
 - ❓ [FAQ](./docs/FAQ.md) - Common questions and troubleshooting
 
 ### Code Examples

@@ -3,8 +3,8 @@
     {
       "VendorId": 300000001428293,
       "VendorNumber": "SUP-1001",
-      "VendorName": "Acme Corporation",
-      "AlternateName": "Acme Corp",
+      "VendorName": "Example Corporation",
+      "AlternateName": "Example Corp",
       "VendorType": "STANDARD",
       "TaxOrganizationType": "CORPORATION",
       "InactiveDate": null,
@@ -42,7 +42,7 @@
           "RFQOnlySiteFlag": false,
           "InactiveDate": null,
           "PaymentMethod": "CHECK",
-          "RemitToSupplierName": "Acme Corporation",
+          "RemitToSupplierName": "Example Corporation",
           "RemitToAddressLine1": "PO Box 12345",
           "RemitToCity": "San Francisco",
           "RemitToState": "CA",
@@ -99,7 +99,7 @@
         {
           "BankAccountId": 300000001428297,
           "BankAccountNumber": "****1234",
-          "BankAccountName": "Acme Corp Operating Account",
+          "BankAccountName": "Example Corp Operating Account",
           "BankName": "First National Bank",
           "BankNumber": "021000021",
           "BranchName": "Main Branch",
