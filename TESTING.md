@@ -21,7 +21,10 @@ This document provides comprehensive testing guidelines for implementing and val
 ## Prerequisites
 
 ### Required Tools
-- **MuleSoft Anypoint Studio** 7.12+ or Anypoint Platform access
+- **MuleSoft Anypoint Studio** 7.18+ or Anypoint Platform access
+- **MuleSoft Runtime** 4.9.0+ (for latest features and performance)
+- **Java Development Kit** 17+ (LTS version recommended)
+- **Maven** 3.9+ (for build and dependency management)
 - **Postman** or similar API testing tool
 - **SoapUI** for SOAP/BIP testing
 - **JMeter** for performance testing
@@ -35,9 +38,11 @@ This document provides comprehensive testing guidelines for implementing and val
 
 ### Knowledge Requirements
 - Understanding of RESTful APIs and SOAP services
-- Basic knowledge of OAuth2, SAML, and JWT
-- Familiarity with DataWeave 2.0
-- Oracle Fusion API documentation
+- Basic knowledge of OAuth2, SAML, and JWT authentication flows
+- Familiarity with **DataWeave 2.0** and modern syntax
+- **MuleSoft 4.9.x** runtime features and capabilities
+- **Java 17** language features and JVM improvements
+- Oracle Fusion API documentation and integration patterns
 
 ---
 
@@ -81,11 +86,22 @@ test:
 ### 3. Install Dependencies
 
 ```bash
-# For MuleSoft project
+# Verify Java 17 installation
+java -version
+# Should show Java 17.x.x
+
+# Verify Maven version
+mvn -version
+# Should show Maven 3.9+
+
+# For MuleSoft project (with Java 17)
 mvn clean install -DskipTests
 
 # For mock services
 npm install -g json-server
+
+# Optional: Install Anypoint CLI for CloudHub deployment
+npm install -g anypoint-cli@latest
 ```
 
 ---
@@ -512,8 +528,12 @@ Add to your `log4j2.xml`:
 ## Test Execution Commands
 
 ```bash
-# Run unit tests
-mvn test
+# Verify Java 17 is being used
+echo $JAVA_HOME
+java -version
+
+# Run unit tests (with Java 17)
+mvn test -Djava.version=17
 
 # Run integration tests
 mvn verify -Pintegration-tests
@@ -521,11 +541,17 @@ mvn verify -Pintegration-tests
 # Run specific test suite
 mvn test -Dtest=OracleFusionAuthenticationTest
 
-# Generate test report
-mvn surefire-report:report
+# Generate test report with coverage
+mvn clean test jacoco:report surefire-report:report
 
-# Run with coverage
-mvn clean test jacoco:report
+# Run performance tests with updated JVM flags for Java 17
+mvn test -Pperformance-tests -Djvm.args="--add-opens java.base/java.lang=ALL-UNNAMED"
+
+# Build and test for Mule 4.9.x deployment
+mvn clean package -Dmule.version=4.9.0
+
+# Deploy to CloudHub 2.0 (if configured)
+mvn clean deploy -DmuleDeploy -DcloudHub2=true
 ```
 
 ---
@@ -535,7 +561,7 @@ mvn clean test jacoco:report
 ### GitHub Actions Workflow
 
 ```yaml
-name: Integration Tests
+name: Oracle Fusion Integration Tests
 
 on:
   push:
@@ -548,26 +574,52 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
-    - name: Set up JDK 11
-      uses: actions/setup-java@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
       with:
-        java-version: '11'
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
         
     - name: Start Mock Services
       run: |
         npm install
         npm run mock-server &
+        sleep 10 # Wait for mock server to start
         
-    - name: Run Tests
-      run: mvn clean verify
+    - name: Verify Java 17 Setup
+      run: |
+        java -version
+        mvn -version
+        
+    - name: Run Tests with Mule 4.9.x
+      run: mvn clean verify -Dmule.version=4.9.0
+      env:
+        MAVEN_OPTS: "--add-opens java.base/java.lang=ALL-UNNAMED"
+      
+    - name: Generate Test Reports
+      run: mvn surefire-report:report jacoco:report
       
     - name: Upload Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results
-        path: target/surefire-reports/
+        path: |
+          target/surefire-reports/
+          target/site/jacoco/
+          
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: target/site/jacoco/jacoco.xml
 ```
 
 ---

@@ -1,7 +1,8 @@
 # Oracle Fusion + MuleSoft Integration Blueprint
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![MuleSoft](https://img.shields.io/badge/MuleSoft-4.4+-00A0DF.svg)](https://www.mulesoft.com/)
+[![MuleSoft](https://img.shields.io/badge/MuleSoft-4.9+-00A0DF.svg)](https://www.mulesoft.com/)
+[![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.org/projects/jdk/17/)
 [![Oracle Fusion](https://img.shields.io/badge/Oracle%20Fusion-Cloud-red.svg)](https://www.oracle.com/cloud/applications/)
 [![API Design](https://img.shields.io/badge/API-Design%20First-brightgreen.svg)](https://www.mulesoft.com/resources/api/design-first-approach)
 [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue.svg)](./oracle-fusion-mulesoft-best-practices.md)
@@ -42,10 +43,11 @@ This repository provides enterprise architects, integration developers, and tech
 ## 🚀 Quick Start
 
 ### Prerequisites
-- MuleSoft Anypoint Studio 7.12+ or Anypoint Platform access
-- Oracle Fusion Cloud instance (ERP/EPM)
-- Java 8 or 11
-- Maven 3.6+
+- **MuleSoft Anypoint Studio 7.18+** or Anypoint Platform access
+- **MuleSoft Runtime 4.9.0+** (supports latest features and performance improvements)
+- **Oracle Fusion Cloud instance** (ERP/EPM) with API access
+- **Java 17+** (LTS version recommended)
+- **Maven 3.9+** (for build and dependency management)
 
 ### Installation
 
@@ -131,27 +133,32 @@ mvn clean test jacoco:report
 
 ### 🔐 Security
 - Multi-layer authentication (SAML → JWT → OAuth2)
-- Secure credential management
-- Token caching and refresh strategies
+- Secure credential management with property encryption
+- Token caching and refresh strategies with ObjectStore v2
 - Client ID enforcement and rate limiting
+- Java 17 security enhancements
 
 ### 🛠️ Development
-- API-first design with RAML
-- Reusable DataWeave modules
+- **MuleSoft 4.9.x** latest runtime features
+- API-first design with RAML 1.0
+- Reusable DataWeave 2.0 modules
 - Environment-specific configurations
-- Comprehensive error handling
+- Comprehensive error handling and retry patterns
+- Modern Java 17 language features
 
 ### 📈 Operations
-- Circuit breaker patterns
-- Retry mechanisms
-- Correlation ID tracking
-- Centralized logging
+- Enhanced circuit breaker patterns
+- Intelligent retry mechanisms with backoff
+- Correlation ID tracking for observability
+- Centralized logging with structured output
+- CloudHub 2.0 compatibility
 
 ### 🚀 Performance
-- Connection pooling
-- Asynchronous processing
-- Caching strategies
-- Batch operations support
+- Optimized connection pooling
+- Asynchronous processing with improved threading
+- Advanced caching strategies
+- Batch operations with streaming support
+- Memory efficiency improvements in Mule 4.9.x
 
 ## 🤝 Contributing
 

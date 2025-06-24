@@ -1,5 +1,5 @@
 {
-  "minMuleVersion": "4.4.0",
+  "minMuleVersion": "4.9.0",
   "requiredProduct": "MULE_EE",
   "classLoaderModelLoaderDescriptor": {
     "id": "mule",
@@ -37,7 +37,6 @@
     "secure.key"
   ],
   "supportedJavaVersions": [
-    "1.8.0_111",
-    "11.0.3"
+    "17.0.0"
   ]
 }
