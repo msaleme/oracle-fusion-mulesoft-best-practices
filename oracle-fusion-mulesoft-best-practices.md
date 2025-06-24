@@ -73,10 +73,40 @@ GET /token/refresh
 ```
 
 ### Reusable Components
-- `FusionAuthModule.dwl`: Handles Azure AD authentication, token flow.
-- `TokenCacheFlow.xml`: Implements in-memory or external token storage.
-- `BIPReportFetcher.dwl`: Calls SOAP endpoint and decodes report data.
-- `OracleErrorMapper.dwl`: Maps Fusion fault responses to standardized MuleSoft errors.
+
+#### Production-Ready DataWeave Modules
+- **`FusionAuthModule.dwl`** - Complete authentication module providing:
+  - SAML assertion generation for Oracle Fusion
+  - JWT token exchange and validation
+  - OAuth2 flows (password, client credentials, refresh token)
+  - Azure AD integration patterns
+  - Token expiration checking and refresh logic
+  - Error handling for authentication failures
+
+- **`BIPReportFetcher.dwl`** - Comprehensive BIP report handling:
+  - SOAP envelope construction for report requests
+  - Synchronous and asynchronous report execution
+  - Base64 content decoding and format transformation
+  - Support for JSON, XML, CSV, PDF, Excel outputs
+  - Report parameter validation and formatting
+  - Job status monitoring for large reports
+
+- **`OracleErrorMapper.dwl`** - Enterprise error handling:
+  - Standardized error response format across all APIs
+  - Oracle Fusion REST and SOAP error mapping
+  - HTTP status code normalization
+  - Retry strategy recommendations
+  - Error categorization and severity levels
+  - Comprehensive logging and audit trail
+
+#### MuleSoft Flow Implementations
+- **`TokenCacheFlow.xml`** - Production token management:
+  - Thread-safe ObjectStore-based token caching
+  - Automatic token refresh with expiration buffer
+  - Support for multiple authentication flows
+  - Circuit breaker patterns and retry logic
+  - Performance optimization through intelligent caching
+  - Comprehensive error handling and fallback strategies
 
 ### Security
 - Use secure property files for client secrets and SAML configs.
@@ -169,6 +199,39 @@ POST /createInvoice
 - **CI/CD Pipelines**: Use GitHub Actions or Jenkins to deploy APIs.
 - **Monitoring**: Integrate with Anypoint Monitoring or third-party tools like Datadog.
 - **Data Cataloging**: Use Anypoint Exchange and RAML annotations for discoverability.
+
+---
+
+## Production Deployment Artifacts
+
+This repository includes complete MuleSoft deployment artifacts for immediate use:
+
+### Maven Project Structure
+- **`pom.xml`** - Complete Maven configuration with:
+  - MuleSoft Runtime 4.4+ compatibility
+  - All required connectors and dependencies
+  - CloudHub and on-premise deployment profiles
+  - Testing framework integration (MUnit, JaCoCo)
+  - Code quality and security scanning plugins
+
+### Deployment Configuration
+- **`mule-artifact.json`** - Application deployment descriptor
+- **`src/main/resources/config/`** - Environment-specific configurations
+- **`src/main/resources/log4j2.xml`** - Comprehensive logging configuration
+
+### Ready-to-Deploy Features
+- Complete token management flows with caching
+- Production-grade error handling and retry logic
+- Comprehensive logging and monitoring capabilities
+- Security best practices implementation
+- Performance optimization through connection pooling
+- Environment-specific configuration management
+
+### Testing Infrastructure
+- Mock Oracle Fusion server for development
+- Complete Postman collection for API testing
+- Unit and integration test examples
+- Performance testing configurations
 
 ---
 

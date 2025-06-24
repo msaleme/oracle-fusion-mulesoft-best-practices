@@ -1,0 +1,43 @@
+{
+  "minMuleVersion": "4.4.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedResources": [
+        "/dwl/FusionAuthModule.dwl",
+        "/dwl/BIPReportFetcher.dwl", 
+        "/dwl/OracleErrorMapper.dwl",
+        "/TokenCacheFlow.xml"
+      ],
+      "exportedPackages": [
+        "com.oracle.fusion.integration.auth",
+        "com.oracle.fusion.integration.error",
+        "com.oracle.fusion.integration.reports"
+      ],
+      "includeTestDependencies": false
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  },
+  "name": "oracle-fusion-mulesoft-best-practices",
+  "configs": [
+    "oracle-fusion-system-api.xml",
+    "TokenCacheFlow.xml"
+  ],
+  "redeploymentEnabled": true,
+  "domain": "default",
+  "logConfigFile": "log4j2.xml",
+  "secureProperties": [
+    "oracle.fusion.auth.client.secret",
+    "oracle.fusion.auth.password",
+    "azure.ad.client.secret",
+    "secure.key"
+  ],
+  "supportedJavaVersions": [
+    "1.8.0_111",
+    "11.0.3"
+  ]
+}

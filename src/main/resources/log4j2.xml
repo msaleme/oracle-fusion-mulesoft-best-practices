@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+
+    <!-- Appenders -->
+    <Appenders>
+        
+        <!-- Console Appender -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%-5p %d [%t] [%X{correlationId}] %c: %m%n"/>
+        </Console>
+        
+        <!-- File Appender for Application Logs -->
+        <RollingFile name="ApplicationLog" fileName="logs/oracle-fusion-integration.log"
+                     filePattern="logs/oracle-fusion-integration-%d{MM-dd-yy-HH-mm-ss}-%i.log">
+            <PatternLayout>
+                <Pattern>%d{ISO8601} [%thread] %-5level [%X{correlationId}] %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+        
+        <!-- File Appender for Authentication Logs -->
+        <RollingFile name="AuthenticationLog" fileName="logs/authentication.log"
+                     filePattern="logs/authentication-%d{MM-dd-yy}-%i.log">
+            <PatternLayout>
+                <Pattern>%d{ISO8601} [%thread] %-5level [%X{correlationId}] %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="50 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+        
+        <!-- File Appender for Oracle Fusion API Logs -->
+        <RollingFile name="OracleFusionLog" fileName="logs/oracle-fusion-api.log"
+                     filePattern="logs/oracle-fusion-api-%d{MM-dd-yy}-%i.log">
+            <PatternLayout>
+                <Pattern>%d{ISO8601} [%thread] %-5level [%X{correlationId}] %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="50 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+        
+        <!-- File Appender for Error Logs -->
+        <RollingFile name="ErrorLog" fileName="logs/errors.log"
+                     filePattern="logs/errors-%d{MM-dd-yy}-%i.log">
+            <PatternLayout>
+                <Pattern>%d{ISO8601} [%thread] %-5level [%X{correlationId}] %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="50 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+            <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
+        </RollingFile>
+        
+        <!-- File Appender for Audit Logs -->
+        <RollingFile name="AuditLog" fileName="logs/audit.log"
+                     filePattern="logs/audit-%d{MM-dd-yy}-%i.log">
+            <PatternLayout>
+                <Pattern>%d{ISO8601} [%thread] [%X{correlationId}] [%X{userId}] %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="20"/>
+        </RollingFile>
+        
+    </Appenders>
+    
+    <!-- Loggers -->
+    <Loggers>
+    
+        <!-- Root Logger -->
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </Root>
+        
+        <!-- MuleSoft Core Loggers -->
+        <AsyncLogger name="org.mule.runtime.core" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </AsyncLogger>
+        
+        <!-- HTTP Connector Logging -->
+        <AsyncLogger name="org.mule.extension.http" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </AsyncLogger>
+        
+        <!-- OAuth2 and Security Logging -->
+        <AsyncLogger name="org.mule.extension.oauth2" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AuthenticationLog"/>
+        </AsyncLogger>
+        
+        <AsyncLogger name="org.mule.runtime.module.extension.internal.capability.xml.schema" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </AsyncLogger>
+        
+        <!-- Oracle Fusion Specific Logging -->
+        <AsyncLogger name="com.oracle.fusion" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="OracleFusionLog"/>
+        </AsyncLogger>
+        
+        <!-- Authentication Module Logging -->
+        <AsyncLogger name="fusion.auth" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AuthenticationLog"/>
+        </AsyncLogger>
+        
+        <!-- Token Cache Logging -->
+        <AsyncLogger name="tokenCacheFlow" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AuthenticationLog"/>
+        </AsyncLogger>
+        
+        <!-- BIP Report Logging -->
+        <AsyncLogger name="bip.reports" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="OracleFusionLog"/>
+        </AsyncLogger>
+        
+        <!-- Error Mapping Logging -->
+        <AsyncLogger name="error.mapping" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ErrorLog"/>
+        </AsyncLogger>
+        
+        <!-- Object Store Logging -->
+        <AsyncLogger name="org.mule.extension.objectstore" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </AsyncLogger>
+        
+        <!-- Web Service Consumer Logging -->
+        <AsyncLogger name="org.mule.extension.ws" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="OracleFusionLog"/>
+        </AsyncLogger>
+        
+        <!-- JSON Module Logging -->
+        <AsyncLogger name="org.mule.extension.json" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </AsyncLogger>
+        
+        <!-- Validation Module Logging -->
+        <AsyncLogger name="org.mule.extension.validation" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </AsyncLogger>
+        
+        <!-- Crypto Module Logging -->
+        <AsyncLogger name="org.mule.extension.crypto" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AuthenticationLog"/>
+        </AsyncLogger>
+        
+        <!-- Compression Module Logging -->
+        <AsyncLogger name="org.mule.extension.compression" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </AsyncLogger>
+        
+        <!-- Email Connector Logging -->
+        <AsyncLogger name="org.mule.extension.email" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </AsyncLogger>
+        
+        <!-- File Connector Logging -->
+        <AsyncLogger name="org.mule.extension.file" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </AsyncLogger>
+        
+        <!-- JMS Connector Logging -->
+        <AsyncLogger name="org.mule.extension.jms" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </AsyncLogger>
+        
+        <!-- DataWeave Logging -->
+        <AsyncLogger name="org.mule.weave" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </AsyncLogger>
+        
+        <!-- Configuration Logging -->
+        <AsyncLogger name="org.mule.runtime.core.internal.config" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </AsyncLogger>
+        
+        <!-- Spring Framework Logging (reduce verbosity) -->
+        <AsyncLogger name="org.springframework" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </AsyncLogger>
+        
+        <!-- Jackson JSON Logging -->
+        <AsyncLogger name="com.fasterxml.jackson" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </AsyncLogger>
+        
+        <!-- Apache Commons Logging -->
+        <AsyncLogger name="org.apache.commons" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </AsyncLogger>
+        
+        <!-- Jetty HTTP Server Logging -->
+        <AsyncLogger name="org.eclipse.jetty" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </AsyncLogger>
+        
+        <!-- Connection Pool Logging -->
+        <AsyncLogger name="com.zaxxer.hikari" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </AsyncLogger>
+        
+        <!-- Audit Trail Logger -->
+        <AsyncLogger name="AUDIT" level="INFO" additivity="false">
+            <AppenderRef ref="AuditLog"/>
+        </AsyncLogger>
+        
+        <!-- Performance Monitoring Logger -->
+        <AsyncLogger name="PERFORMANCE" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationLog"/>
+        </AsyncLogger>
+        
+        <!-- Security Events Logger -->
+        <AsyncLogger name="SECURITY" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AuthenticationLog"/>
+            <AppenderRef ref="AuditLog"/>
+        </AsyncLogger>
+        
+    </Loggers>
+    
+</Configuration>

@@ -1,0 +1,144 @@
+# Oracle Fusion + MuleSoft Integration - Development Configuration
+# This file contains development environment settings
+
+# Oracle Fusion Configuration
+oracle:
+  fusion:
+    base:
+      url: "https://dev-instance.oraclecloud.com"
+      host: "dev-instance.oraclecloud.com"
+      port: "443"
+    
+    # ERP Configuration
+    erp:
+      path: "/fscmRestApi/resources/11.13.18.05"
+      timeout: "30000"
+      
+    # EPM Configuration  
+    epm:
+      path: "/xmlpserver/services/v2"
+      timeout: "60000"
+      
+    # Authentication Configuration
+    auth:
+      host: "dev-instance.oraclecloud.com"
+      port: "443"
+      username: "integration_user_dev"
+      password: "${secure::oracle.fusion.auth.password}"
+      client:
+        id: "${secure::oracle.fusion.auth.client.id}"
+        secret: "${secure::oracle.fusion.auth.client.secret}"
+      token:
+        path: "/oauth2/v1/token"
+        scope: "urn:opc:resource:scope:all"
+        cache:
+          ttl: "3600"
+          maxEntries: "100"
+
+# Azure AD Configuration
+azure:
+  ad:
+    tenant:
+      id: "your-tenant-id-dev"
+    client:
+      id: "your-client-id-dev"
+      secret: "${secure::azure.ad.client.secret}"
+    authority: "https://login.microsoftonline.com/"
+    scope: "https://dev-instance.oraclecloud.com/.default"
+
+# HTTP Configuration
+http:
+  listener:
+    host: "0.0.0.0"
+    port: "8081"
+    protocol: "HTTP"
+  
+  request:
+    timeout: "30000"
+    connection:
+      maxConnections: "50"
+      connectionIdleTimeout: "30000"
+    tls:
+      enabled: false
+      
+# Object Store Configuration  
+objectstore:
+  token:
+    cache:
+      maxEntries: "1000"
+      entryTtl: "3600"
+      persistent: true
+
+# Logging Configuration
+logging:
+  level:
+    root: "INFO"
+    oracle:
+      fusion: "DEBUG"
+    com:
+      mulesoft: "INFO"
+  correlation:
+    enabled: true
+
+# API Configuration
+api:
+  version: "v1"
+  base:
+    path: "/api"
+  cors:
+    enabled: true
+    origins: "*"
+    
+# Retry Configuration
+retry:
+  auth:
+    maxAttempts: "3"
+    delay: "2000"
+  api:
+    maxAttempts: "2"
+    delay: "1000"
+    
+# Circuit Breaker Configuration
+circuitbreaker:
+  enabled: true
+  failure:
+    threshold: "5"
+  timeout: "60000"
+  
+# Rate Limiting
+ratelimit:
+  enabled: true
+  requests:
+    perSecond: "100"
+  burst:
+    capacity: "200"
+
+# Monitoring and Metrics
+monitoring:
+  enabled: true
+  metrics:
+    enabled: true
+    export:
+      interval: "60000"
+  health:
+    check:
+      enabled: true
+      
+# Security Configuration
+security:
+  encryption:
+    key: "${secure::secure.key}"
+  client:
+    enforcement:
+      enabled: true
+      
+# Environment Specific
+environment: "development"
+debug:
+  enabled: true
+mock:
+  services:
+    enabled: true
+    oracle:
+      fusion:
+        enabled: true

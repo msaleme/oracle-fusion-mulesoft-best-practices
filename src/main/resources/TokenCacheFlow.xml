@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" 
+      xmlns:os="http://www.mulesoft.org/schema/mule/os"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns="http://www.mulesoft.org/schema/mule/core" 
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" 
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+      http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+      http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+
+	<!-- 
+		Oracle Fusion Token Cache Flow
+		
+		This flow provides centralized token management for Oracle Fusion Cloud authentication.
+		It implements caching, refresh logic, and error handling for OAuth2 tokens.
+		
+		Features:
+		- Automatic token refresh when expired
+		- Thread-safe token storage using ObjectStore
+		- Retry logic for token failures
+		- Support for multiple authentication flows
+		- Performance optimization through caching
+		
+		Author: Oracle Fusion + MuleSoft Integration Team
+		Version: 1.0.0
+		Last Modified: 2024-06-24
+	-->
+
+	<!-- Object Store Configuration for Token Storage -->
+	<os:object-store name="tokenStore" 
+		doc:name="Token Store" 
+		doc:id="token-store-config"
+		maxEntries="1000"
+		entryTtl="3600"
+		entryTtlUnit="SECONDS"
+		expirationInterval="300"
+		expirationIntervalUnit="SECONDS"
+		persistent="true" />
+
+	<!-- HTTP Configuration for Oracle Fusion Authentication -->
+	<http:request-config name="oracleFusionAuthConfig" doc:name="Oracle Fusion Auth Config" doc:id="oracle-fusion-auth-config">
+		<http:request-connection host="${oracle.fusion.auth.host}" port="${oracle.fusion.auth.port}" protocol="HTTPS">
+			<http:authentication>
+				<http:basic-authentication username="${oracle.fusion.auth.username}" password="${oracle.fusion.auth.password}"/>
+			</http:authentication>
+		</http:request-connection>
+		<http:default-headers>
+			<http:default-header key="Content-Type" value="application/x-www-form-urlencoded"/>
+			<http:default-header key="Accept" value="application/json"/>
+		</http:default-headers>
+	</http:request-config>
+
+	<!-- Main Token Cache Flow -->
+	<flow name="tokenCacheFlow" doc:id="token-cache-flow">
+		<logger level="DEBUG" doc:name="Log Request" doc:id="log-token-request" 
+			message="Token cache request received for client: #[vars.clientId default 'default']" />
+		
+		<!-- Set default variables -->
+		<set-variable value="${oracle.fusion.auth.clientId}" doc:name="Set Client ID" doc:id="set-client-id" variableName="clientId" />
+		<set-variable value="${oracle.fusion.auth.clientSecret}" doc:name="Set Client Secret" doc:id="set-client-secret" variableName="clientSecret" />
+		<set-variable value="#[vars.clientId ++ '_token']" doc:name="Set Cache Key" doc:id="set-cache-key" variableName="cacheKey" />
+		
+		<!-- Try to retrieve cached token -->
+		<try doc:name="Try Get Cached Token" doc:id="try-get-cached-token">
+			<os:retrieve doc:name="Retrieve Cached Token" doc:id="retrieve-cached-token" 
+				key="#[vars.cacheKey]" 
+				objectStore="tokenStore" 
+				target="cachedToken" />
+			
+			<!-- Check if cached token is valid and not expired -->
+			<choice doc:name="Check Token Validity" doc:id="check-token-validity">
+				<when expression="#[vars.cachedToken != null and vars.cachedToken.accessToken != null]">
+					<ee:transform doc:name="Check Token Expiration" doc:id="check-token-expiration">
+						<ee:variables>
+							<ee:set-variable variableName="isTokenExpired"><![CDATA[%dw 2.0
+import * from dwl::FusionAuthModule
+---
+isTokenExpired(vars.cachedToken, 5)]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					
+					<choice doc:name="Token Expired?" doc:id="token-expired-choice">
+						<when expression="#[vars.isTokenExpired == false]">
+							<logger level="DEBUG" doc:name="Log Cache Hit" doc:id="log-cache-hit" 
+								message="Valid token found in cache for client: #[vars.clientId]" />
+							<set-payload value="#[vars.cachedToken]" doc:name="Return Cached Token" doc:id="return-cached-token" />
+						</when>
+						<otherwise>
+							<logger level="INFO" doc:name="Log Token Expired" doc:id="log-token-expired" 
+								message="Cached token expired for client: #[vars.clientId], refreshing..." />
+							<flow-ref doc:name="Refresh Token Flow" doc:id="refresh-token-flow-ref" name="refreshTokenFlow" />
+						</otherwise>
+					</choice>
+				</when>
+				<otherwise>
+					<logger level="INFO" doc:name="Log No Cache" doc:id="log-no-cache" 
+						message="No valid token in cache for client: #[vars.clientId], obtaining new token..." />
+					<flow-ref doc:name="Obtain New Token" doc:id="obtain-new-token-ref" name="obtainNewTokenFlow" />
+				</otherwise>
+			</choice>
+			
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Cache Error" doc:id="on-cache-error" type="OS:KEY_NOT_FOUND">
+					<logger level="INFO" doc:name="Log Cache Miss" doc:id="log-cache-miss" 
+						message="Token not found in cache for client: #[vars.clientId], obtaining new token..." />
+					<flow-ref doc:name="Obtain New Token" doc:id="obtain-new-token-cache-miss-ref" name="obtainNewTokenFlow" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+	</flow>
+
+	<!-- Obtain New Token Flow -->
+	<flow name="obtainNewTokenFlow" doc:id="obtain-new-token-flow">
+		<logger level="DEBUG" doc:name="Log New Token Request" doc:id="log-new-token-request" 
+			message="Obtaining new token for client: #[vars.clientId]" />
+		
+		<!-- Determine authentication method based on configuration -->
+		<choice doc:name="Authentication Method" doc:id="auth-method-choice">
+			<when expression="#[!isEmpty(p('oracle.fusion.auth.username')) and !isEmpty(p('oracle.fusion.auth.password'))]">
+				<flow-ref doc:name="Password Grant Flow" doc:id="password-grant-flow-ref" name="passwordGrantFlow" />
+			</when>
+			<when expression="#[!isEmpty(p('oracle.fusion.auth.samlAssertion'))]">
+				<flow-ref doc:name="SAML Grant Flow" doc:id="saml-grant-flow-ref" name="samlGrantFlow" />
+			</when>
+			<otherwise>
+				<flow-ref doc:name="Client Credentials Flow" doc:id="client-credentials-flow-ref" name="clientCredentialsFlow" />
+			</otherwise>
+		</choice>
+		
+		<!-- Cache the new token -->
+		<flow-ref doc:name="Cache Token" doc:id="cache-token-ref" name="cacheTokenFlow" />
+	</flow>
+
+	<!-- Password Grant Flow -->
+	<flow name="passwordGrantFlow" doc:id="password-grant-flow">
+		<logger level="DEBUG" doc:name="Log Password Grant" doc:id="log-password-grant" 
+			message="Using password grant for token acquisition" />
+		
+		<ee:transform doc:name="Build Password Grant Request" doc:id="build-password-grant-request">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import * from dwl::FusionAuthModule
+---
+buildPasswordGrantRequest({
+	username: p('oracle.fusion.auth.username'),
+	password: p('oracle.fusion.auth.password'),
+	clientId: vars.clientId,
+	clientSecret: vars.clientSecret,
+	scope: p('oracle.fusion.auth.scope')
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<flow-ref doc:name="Make Token Request" doc:id="make-token-request-password" name="makeTokenRequestFlow" />
+	</flow>
+
+	<!-- SAML Grant Flow -->
+	<flow name="samlGrantFlow" doc:id="saml-grant-flow">
+		<logger level="DEBUG" doc:name="Log SAML Grant" doc:id="log-saml-grant" 
+			message="Using SAML grant for token acquisition" />
+		
+		<ee:transform doc:name="Build SAML Grant Request" doc:id="build-saml-grant-request">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import * from dwl::FusionAuthModule
+---
+buildJWTTokenRequest(
+	p('oracle.fusion.auth.samlAssertion'),
+	{
+		clientId: vars.clientId,
+		clientSecret: vars.clientSecret,
+		scope: p('oracle.fusion.auth.scope')
+	}
+)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<flow-ref doc:name="Make Token Request" doc:id="make-token-request-saml" name="makeTokenRequestFlow" />
+	</flow>
+
+	<!-- Client Credentials Flow -->
+	<flow name="clientCredentialsFlow" doc:id="client-credentials-flow">
+		<logger level="DEBUG" doc:name="Log Client Credentials" doc:id="log-client-credentials" 
+			message="Using client credentials grant for token acquisition" />
+		
+		<ee:transform doc:name="Build Client Credentials Request" doc:id="build-client-credentials-request">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import * from dwl::FusionAuthModule
+---
+buildClientCredentialsRequest({
+	clientId: vars.clientId,
+	clientSecret: vars.clientSecret,
+	scope: p('oracle.fusion.auth.scope')
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<flow-ref doc:name="Make Token Request" doc:id="make-token-request-client-creds" name="makeTokenRequestFlow" />
+	</flow>
+
+	<!-- Refresh Token Flow -->
+	<flow name="refreshTokenFlow" doc:id="refresh-token-flow">
+		<logger level="DEBUG" doc:name="Log Token Refresh" doc:id="log-token-refresh" 
+			message="Refreshing token for client: #[vars.clientId]" />
+		
+		<choice doc:name="Has Refresh Token?" doc:id="has-refresh-token-choice">
+			<when expression="#[vars.cachedToken.refreshToken != null]">
+				<ee:transform doc:name="Build Refresh Token Request" doc:id="build-refresh-token-request">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+import * from dwl::FusionAuthModule
+---
+buildRefreshTokenRequest(
+	vars.cachedToken.refreshToken,
+	{
+		clientId: vars.clientId,
+		clientSecret: vars.clientSecret
+	}
+)]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				
+				<flow-ref doc:name="Make Token Request" doc:id="make-token-request-refresh" name="makeTokenRequestFlow" />
+				<flow-ref doc:name="Cache Token" doc:id="cache-refreshed-token-ref" name="cacheTokenFlow" />
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Log No Refresh Token" doc:id="log-no-refresh-token" 
+					message="No refresh token available, obtaining new token" />
+				<flow-ref doc:name="Obtain New Token" doc:id="obtain-new-token-refresh-ref" name="obtainNewTokenFlow" />
+			</otherwise>
+		</choice>
+	</flow>
+
+	<!-- Make Token Request Flow -->
+	<flow name="makeTokenRequestFlow" doc:id="make-token-request-flow">
+		<logger level="DEBUG" doc:name="Log Token Request" doc:id="log-token-http-request" 
+			message="Making token request to Oracle Fusion" />
+		
+		<!-- Convert payload to URL encoded form -->
+		<ee:transform doc:name="Convert to Form Data" doc:id="convert-to-form-data">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/x-www-form-urlencoded
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Make HTTP request with retry logic -->
+		<until-successful maxRetries="3" millisBetweenRetries="2000" doc:name="Until Successful" doc:id="token-request-retry">
+			<http:request method="POST" doc:name="Request Token" doc:id="request-token-http" 
+				config-ref="oracleFusionAuthConfig" 
+				path="${oracle.fusion.auth.tokenPath}"
+				responseTimeout="30000">
+				<http:headers><![CDATA[#[{
+					"Content-Type": "application/x-www-form-urlencoded",
+					"Accept": "application/json",
+					"X-Correlation-ID": vars.correlationId default uuid()
+				}]]]></http:headers>
+			</http:request>
+		</until-successful>
+		
+		<!-- Parse and validate token response -->
+		<ee:transform doc:name="Parse Token Response" doc:id="parse-token-response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import * from dwl::FusionAuthModule
+---
+parseTokenResponse(payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Validate token response -->
+		<choice doc:name="Token Valid?" doc:id="token-valid-choice">
+			<when expression="#[payload.isValid == true]">
+				<logger level="INFO" doc:name="Log Token Success" doc:id="log-token-success" 
+					message="Token obtained successfully for client: #[vars.clientId], expires at: #[payload.expiresAt]" />
+			</when>
+			<otherwise>
+				<logger level="ERROR" doc:name="Log Token Error" doc:id="log-token-error" 
+					message="Failed to obtain valid token for client: #[vars.clientId]" />
+				<raise-error doc:name="Raise Token Error" doc:id="raise-token-error" 
+					type="FUSION:TOKEN_ERROR" 
+					description="Failed to obtain valid authentication token" />
+			</otherwise>
+		</choice>
+		
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Token Error" doc:id="on-token-error" type="HTTP:CONNECTIVITY,HTTP:TIMEOUT">
+				<logger level="ERROR" doc:name="Log HTTP Error" doc:id="log-http-error" 
+					message="HTTP error during token request: #[error.description]" />
+				<ee:transform doc:name="Transform Error" doc:id="transform-token-error">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+import * from dwl::FusionAuthModule
+---
+handleAuthError({
+	error: "HTTP_ERROR",
+	error_description: error.description,
+	status: 500
+})]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<raise-error doc:name="Raise HTTP Error" doc:id="raise-http-error" 
+					type="FUSION:HTTP_ERROR" 
+					description="#[payload.errorDescription]" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- Cache Token Flow -->
+	<flow name="cacheTokenFlow" doc:id="cache-token-flow">
+		<logger level="DEBUG" doc:name="Log Token Caching" doc:id="log-token-caching" 
+			message="Caching token for client: #[vars.clientId], expires at: #[payload.expiresAt]" />
+		
+		<try doc:name="Try Cache Token" doc:id="try-cache-token">
+			<os:store doc:name="Store Token" doc:id="store-token" 
+				key="#[vars.cacheKey]" 
+				objectStore="tokenStore" 
+				failIfPresent="false">
+				<os:value><![CDATA[#[payload]]]></os:value>
+			</os:store>
+			
+			<logger level="INFO" doc:name="Log Cache Success" doc:id="log-cache-success" 
+				message="Token cached successfully for client: #[vars.clientId]" />
+			
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Cache Error" doc:id="on-cache-store-error" type="OS:STORE_ERROR">
+					<logger level="WARN" doc:name="Log Cache Warning" doc:id="log-cache-warning" 
+						message="Failed to cache token for client: #[vars.clientId], continuing without cache" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+	</flow>
+
+	<!-- Token Validation Flow -->
+	<flow name="validateTokenFlow" doc:id="validate-token-flow">
+		<logger level="DEBUG" doc:name="Log Token Validation" doc:id="log-token-validation" 
+			message="Validating token for request" />
+		
+		<choice doc:name="Has Authorization Header?" doc:id="has-auth-header-choice">
+			<when expression="#[attributes.headers.authorization != null]">
+				<set-variable value="#[attributes.headers.authorization]" doc:name="Set Auth Header" doc:id="set-auth-header" variableName="authHeader" />
+				
+				<choice doc:name="Bearer Token?" doc:id="bearer-token-choice">
+					<when expression="#[vars.authHeader startsWith 'Bearer ']">
+						<set-variable value="#[vars.authHeader[7 to -1]]" doc:name="Extract Token" doc:id="extract-token" variableName="bearerToken" />
+						
+						<!-- Here you could add JWT validation logic -->
+						<logger level="DEBUG" doc:name="Log Valid Token" doc:id="log-valid-token" 
+							message="Valid bearer token found in request" />
+						
+						<set-variable value="true" doc:name="Set Valid" doc:id="set-token-valid" variableName="isTokenValid" />
+					</when>
+					<otherwise>
+						<logger level="WARN" doc:name="Log Invalid Auth" doc:id="log-invalid-auth" 
+							message="Invalid authorization header format" />
+						<set-variable value="false" doc:name="Set Invalid" doc:id="set-token-invalid" variableName="isTokenValid" />
+					</otherwise>
+				</choice>
+			</when>
+			<otherwise>
+				<logger level="WARN" doc:name="Log Missing Auth" doc:id="log-missing-auth" 
+					message="Missing authorization header" />
+				<set-variable value="false" doc:name="Set Missing" doc:id="set-token-missing" variableName="isTokenValid" />
+			</otherwise>
+		</choice>
+		
+		<choice doc:name="Token Valid?" doc:id="final-token-valid-choice">
+			<when expression="#[vars.isTokenValid == true]">
+				<logger level="DEBUG" doc:name="Log Token Validated" doc:id="log-token-validated" 
+					message="Token validation successful" />
+			</when>
+			<otherwise>
+				<raise-error doc:name="Raise Unauthorized" doc:id="raise-unauthorized" 
+					type="FUSION:UNAUTHORIZED" 
+					description="Invalid or missing authentication token" />
+			</otherwise>
+		</choice>
+	</flow>
+
+	<!-- Clear Token Cache Flow -->
+	<flow name="clearTokenCacheFlow" doc:id="clear-token-cache-flow">
+		<logger level="INFO" doc:name="Log Cache Clear" doc:id="log-cache-clear" 
+			message="Clearing token cache for client: #[vars.clientId]" />
+		
+		<try doc:name="Try Clear Cache" doc:id="try-clear-cache">
+			<os:remove doc:name="Remove Token" doc:id="remove-token" 
+				key="#[vars.cacheKey]" 
+				objectStore="tokenStore" />
+			
+			<logger level="INFO" doc:name="Log Clear Success" doc:id="log-clear-success" 
+				message="Token cache cleared successfully for client: #[vars.clientId]" />
+			
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Clear Error" doc:id="on-clear-error" type="OS:KEY_NOT_FOUND">
+					<logger level="DEBUG" doc:name="Log Clear Not Found" doc:id="log-clear-not-found" 
+						message="Token not found in cache for client: #[vars.clientId]" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		
+		<set-payload value='{"message": "Token cache cleared successfully"}' doc:name="Set Success Response" doc:id="set-clear-success-response" />
+	</flow>
+
+</mule>

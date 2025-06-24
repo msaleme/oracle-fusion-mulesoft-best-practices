@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.oracle.fusion.integration</groupId>
+	<artifactId>oracle-fusion-mulesoft-best-practices</artifactId>
+	<version>1.0.0</version>
+	<packaging>mule-application</packaging>
+
+	<name>Oracle Fusion + MuleSoft Integration Best Practices</name>
+	<description>Production-ready integration patterns for Oracle Fusion Cloud (ERP/EPM) with MuleSoft using API-led connectivity</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		
+		<!-- MuleSoft Runtime Version -->
+		<mule.version>4.4.0</mule.version>
+		<mule.tools.version>3.8.2</mule.tools.version>
+		
+		<!-- Connector Versions -->
+		<mule.http.connector.version>1.7.1</mule.http.connector.version>
+		<mule.sockets.connector.version>1.2.2</mule.sockets.connector.version>
+		<mule.objectstore.connector.version>1.2.1</mule.objectstore.connector.version>
+		<mule.oauth.connector.version>1.2.2</mule.oauth.connector.version>
+		<mule.compression.connector.version>2.2.2</mule.compression.connector.version>
+		<mule.crypto.connector.version>1.3.4</mule.crypto.connector.version>
+		<mule.json.connector.version>2.3.1</mule.json.connector.version>
+		<mule.validation.connector.version>1.4.5</mule.validation.connector.version>
+		<mule.wsc.connector.version>1.7.2</mule.wsc.connector.version>
+		<mule.email.connector.version>1.3.2</mule.email.connector.version>
+		<mule.file.connector.version>1.4.1</mule.file.connector.version>
+		<mule.jms.connector.version>1.8.2</mule.jms.connector.version>
+		
+		<!-- Testing Dependencies -->
+		<munit.version>2.3.5</munit.version>
+		<munit.extensions.maven.plugin.version>1.1.1</munit.extensions.maven.plugin.version>
+		
+		<!-- Coverage and Quality -->
+		<jacoco.version>0.8.7</jacoco.version>
+		<sonar.version>3.9.1.2184</sonar.version>
+	</properties>
+
+	<build>
+		<plugins>
+			<!-- Mule Maven Plugin -->
+			<plugin>
+				<groupId>org.mule.tools.maven</groupId>
+				<artifactId>mule-maven-plugin</artifactId>
+				<version>${mule.tools.version}</version>
+				<extensions>true</extensions>
+				<configuration>
+					<sharedLibraries>
+						<sharedLibrary>
+							<groupId>mysql</groupId>
+							<artifactId>mysql-connector-java</artifactId>
+						</sharedLibrary>
+					</sharedLibraries>
+					<cloudHubDeployment>
+						<uri>https://anypoint.mulesoft.com</uri>
+						<muleVersion>${mule.version}</muleVersion>
+						<username>${cloudhub.username}</username>
+						<password>${cloudhub.password}</password>
+						<applicationName>${cloudhub.application.name}</applicationName>
+						<environment>${cloudhub.environment}</environment>
+						<region>${cloudhub.region}</region>
+						<workers>${cloudhub.workers}</workers>
+						<workerType>${cloudhub.worker.type}</workerType>
+						<objectStoreV2>true</objectStoreV2>
+						<properties>
+							<oracle.fusion.base.url>${oracle.fusion.base.url}</oracle.fusion.base.url>
+							<oracle.fusion.auth.client.id>${oracle.fusion.auth.client.id}</oracle.fusion.auth.client.id>
+							<oracle.fusion.auth.client.secret>${oracle.fusion.auth.client.secret}</oracle.fusion.auth.client.secret>
+							<secure.key>${secure.key}</secure.key>
+						</properties>
+					</cloudHubDeployment>
+					<onPremiseDeployment>
+						<muleHome>${mule.home}</muleHome>
+						<muleVersion>${mule.version}</muleVersion>
+					</onPremiseDeployment>
+				</configuration>
+			</plugin>
+			
+			<!-- Maven Compiler Plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
+			
+			<!-- Maven Clean Plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>3.1.0</version>
+			</plugin>
+			
+			<!-- MUnit Maven Plugin -->
+			<plugin>
+				<groupId>com.mulesoft.munit.tools</groupId>
+				<artifactId>munit-maven-plugin</artifactId>
+				<version>${munit.version}</version>
+				<executions>
+					<execution>
+						<id>test</id>
+						<phase>test</phase>
+						<goals>
+							<goal>test</goal>
+							<goal>coverage-report</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<coverage>
+						<runCoverage>true</runCoverage>
+						<formats>
+							<format>html</format>
+							<format>json</format>
+							<format>sonar</format>
+						</formats>
+						<failBuild>false</failBuild>
+						<requiredApplicationCoverage>80</requiredApplicationCoverage>
+						<requiredResourceCoverage>80</requiredResourceCoverage>
+						<requiredFlowCoverage>80</requiredFlowCoverage>
+					</coverage>
+					<environmentVariables>
+						<oracle.fusion.mock.enabled>true</oracle.fusion.mock.enabled>
+					</environmentVariables>
+				</configuration>
+			</plugin>
+			
+			<!-- JaCoCo Code Coverage Plugin -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			
+			<!-- SonarQube Plugin -->
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>${sonar.version}</version>
+			</plugin>
+			
+			<!-- Maven Surefire Plugin for Test Reports -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0-M7</version>
+				<configuration>
+					<includes>
+						<include>**/*Test.java</include>
+						<include>**/*Tests.java</include>
+					</includes>
+				</configuration>
+			</plugin>
+			
+			<!-- Maven Failsafe Plugin for Integration Tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>3.0.0-M7</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<!-- Mule Core -->
+		<dependency>
+			<groupId>org.mule.runtime</groupId>
+			<artifactId>mule-core</artifactId>
+			<version>${mule.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		
+		<!-- Mule HTTP Connector -->
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-http-connector</artifactId>
+			<version>${mule.http.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Mule Sockets Connector -->
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-sockets-connector</artifactId>
+			<version>${mule.sockets.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Mule ObjectStore Connector -->
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-objectstore-connector</artifactId>
+			<version>${mule.objectstore.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Mule OAuth2 Provider -->
+		<dependency>
+			<groupId>org.mule.modules</groupId>
+			<artifactId>mule-oauth2-provider-module</artifactId>
+			<version>${mule.oauth.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Mule Compression Module -->
+		<dependency>
+			<groupId>org.mule.modules</groupId>
+			<artifactId>mule-compression-module</artifactId>
+			<version>${mule.compression.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Mule Crypto Module -->
+		<dependency>
+			<groupId>org.mule.modules</groupId>
+			<artifactId>mule-crypto-module</artifactId>
+			<version>${mule.crypto.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Mule JSON Module -->
+		<dependency>
+			<groupId>org.mule.modules</groupId>
+			<artifactId>mule-json-module</artifactId>
+			<version>${mule.json.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Mule Validation Module -->
+		<dependency>
+			<groupId>org.mule.modules</groupId>
+			<artifactId>mule-validation-module</artifactId>
+			<version>${mule.validation.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Mule Web Service Consumer -->
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-wsc-connector</artifactId>
+			<version>${mule.wsc.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Mule Email Connector -->
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-email-connector</artifactId>
+			<version>${mule.email.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Mule File Connector -->
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-file-connector</artifactId>
+			<version>${mule.file.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Mule JMS Connector -->
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-jms-connector</artifactId>
+			<version>${mule.jms.connector.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		
+		<!-- Database Dependencies -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.30</version>
+		</dependency>
+		
+		<!-- Additional Utilities -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.12.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.15</version>
+		</dependency>
+		
+		<!-- JSON Processing -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.13.4</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.13.4.2</version>
+		</dependency>
+		
+		<!-- XML Processing -->
+		<dependency>
+			<groupId>org.dom4j</groupId>
+			<artifactId>dom4j</artifactId>
+			<version>2.1.3</version>
+		</dependency>
+		
+		<!-- Testing Dependencies -->
+		<dependency>
+			<groupId>com.mulesoft.munit</groupId>
+			<artifactId>munit-runner</artifactId>
+			<version>${munit.version}</version>
+			<classifier>mule-plugin</classifier>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.mulesoft.munit</groupId>
+			<artifactId>munit-tools</artifactId>
+			<version>${munit.version}</version>
+			<classifier>mule-plugin</classifier>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.mule.weave</groupId>
+			<artifactId>assertions</artifactId>
+			<version>1.0.2</version>
+			<scope>test</scope>
+		</dependency>
+		
+		<!-- Mock Server for Testing -->
+		<dependency>
+			<groupId>org.mock-server</groupId>
+			<artifactId>mockserver-netty</artifactId>
+			<version>5.14.0</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>anypoint-exchange</id>
+			<name>Anypoint Exchange</name>
+			<url>https://maven.anypoint.mulesoft.com/api/v1/maven</url>
+			<layout>default</layout>
+		</repository>
+		<repository>
+			<id>mulesoft-releases</id>
+			<name>MuleSoft Releases Repository</name>
+			<url>https://repository.mulesoft.org/releases/</url>
+			<layout>default</layout>
+		</repository>
+		<repository>
+			<id>central</id>
+			<name>Maven Central</name>
+			<url>https://repo1.maven.org/maven2/</url>
+			<layout>default</layout>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>mulesoft-releases</id>
+			<name>MuleSoft Releases Repository</name>
+			<layout>default</layout>
+			<url>https://repository.mulesoft.org/releases/</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<profiles>
+		<!-- Development Profile -->
+		<profile>
+			<id>dev</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+				<mule.env>dev</mule.env>
+				<oracle.fusion.mock.enabled>true</oracle.fusion.mock.enabled>
+			</properties>
+		</profile>
+		
+		<!-- Test Profile -->
+		<profile>
+			<id>test</id>
+			<properties>
+				<mule.env>test</mule.env>
+				<oracle.fusion.mock.enabled>true</oracle.fusion.mock.enabled>
+			</properties>
+		</profile>
+		
+		<!-- Production Profile -->
+		<profile>
+			<id>prod</id>
+			<properties>
+				<mule.env>prod</mule.env>
+				<oracle.fusion.mock.enabled>false</oracle.fusion.mock.enabled>
+			</properties>
+		</profile>
+		
+		<!-- Integration Test Profile -->
+		<profile>
+			<id>integration-tests</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.mulesoft.munit.tools</groupId>
+						<artifactId>munit-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>integration-test</id>
+								<phase>integration-test</phase>
+								<goals>
+									<goal>test</goal>
+								</goals>
+								<configuration>
+									<includes>
+										<include>**/*IntegrationTest.xml</include>
+									</includes>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		
+		<!-- Performance Test Profile -->
+		<profile>
+			<id>performance-tests</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.lazerycode.jmeter</groupId>
+						<artifactId>jmeter-maven-plugin</artifactId>
+						<version>3.6.1</version>
+						<executions>
+							<execution>
+								<id>jmeter-tests</id>
+								<goals>
+									<goal>jmeter</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<testFilesDirectory>src/test/jmeter</testFilesDirectory>
+							<resultsDirectory>target/jmeter/results</resultsDirectory>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<distributionManagement>
+		<repository>
+			<id>anypoint-exchange</id>
+			<name>Corporate Repository</name>
+			<url>https://maven.anypoint.mulesoft.com/api/v1/organizations/${anypoint.org.id}/maven</url>
+			<layout>default</layout>
+		</repository>
+	</distributionManagement>
+
+</project>
