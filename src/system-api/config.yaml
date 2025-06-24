@@ -1,0 +1,55 @@
+# Oracle Fusion System API Configuration
+# Environment-specific values should use placeholders like ${env}
+
+# API Configuration
+api:
+  version: "v1"
+  name: "oracle-fusion-system-api"
+
+# HTTP Listener Configuration
+http:
+  listener:
+    host: "0.0.0.0"
+    port: "${http.port}"
+
+# Oracle Fusion Configuration
+oracle:
+  host: "${oracle.host}"
+  port: "443"
+  token:
+    url: "${oracle.token.url}"
+  resource:
+    url: "${oracle.resource.url}"
+  scopes: "${oracle.scopes}"
+  
+  # Connection Pool Settings
+  max:
+    connections: "50"
+  connection:
+    timeout: "30000"
+    idle:
+      timeout: "300000"
+  response:
+    timeout: "120000"
+
+# Cache Configuration
+cache:
+  max:
+    entries: "1000"
+  ttl:
+    minutes: "60"
+
+# Batch Processing
+batch:
+  processing:
+    size: "50"
+  
+# Retry Configuration
+max:
+  retries: "3"
+retry:
+  interval: "5000"
+
+# Environment
+mule:
+  env: "${env}"

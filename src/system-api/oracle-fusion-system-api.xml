@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:oauth="http://www.mulesoft.org/schema/mule/oauth"
+      xmlns:os="http://www.mulesoft.org/schema/mule/objectstore"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/oauth http://www.mulesoft.org/schema/mule/oauth/current/mule-oauth.xsd
+        http://www.mulesoft.org/schema/mule/objectstore http://www.mulesoft.org/schema/mule/objectstore/current/mule-objectstore.xsd">
+
+    <!-- Configuration -->
+    <configuration-properties file="config.yaml" />
+    <configuration-properties file="secure-config.yaml" />
+
+    <!-- HTTP Listener Configuration -->
+    <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config">
+        <http:listener-connection host="${http.listener.host}" port="${http.listener.port}" />
+    </http:listener-config>
+
+    <!-- Oracle Fusion HTTP Request Configuration with OAuth -->
+    <http:request-config name="Oracle_Fusion_OAuth_Config" doc:name="Oracle Fusion OAuth Config">
+        <http:request-connection host="${oracle.host}" port="${oracle.port}" protocol="HTTPS">
+            <http:authentication>
+                <oauth:client-credentials-grant-type 
+                    clientId="${secure::oracle.client.id}" 
+                    clientSecret="${secure::oracle.client.secret}"
+                    tokenUrl="${oracle.token.url}"
+                    scopes="${oracle.scopes}">
+                    <oauth:custom-parameter-extractors>
+                        <oauth:custom-parameter-extractor parameterName="resource" value="${oracle.resource.url}"/>
+                    </oauth:custom-parameter-extractors>
+                </oauth:client-credentials-grant-type>
+            </http:authentication>
+            <http:connection-pooling-profile 
+                maxConnections="${oracle.max.connections}" 
+                connectionTimeout="${oracle.connection.timeout}"
+                responseTimeout="${oracle.response.timeout}"
+                connectionIdleTimeout="${oracle.connection.idle.timeout}"/>
+        </http:request-connection>
+    </http:request-config>
+
+    <!-- Object Store Configuration for Caching -->
+    <os:object-store name="Oracle_Cache_Store" 
+                     doc:name="Object store"
+                     persistent="true"
+                     maxEntries="${cache.max.entries}"
+                     entryTtl="${cache.ttl.minutes}"
+                     entryTtlUnit="MINUTES"/>
+
+    <!-- Global Error Handler -->
+    <error-handler name="global-error-handler">
+        <on-error-continue type="HTTP:UNAUTHORIZED">
+            <ee:transform doc:name="Transform Unauthorized Error">
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    error: {
+        code: "AUTH_FAILED",
+        message: "Authentication failed. Please check your credentials.",
+        timestamp: now(),
+        correlationId: correlationId
+    }
+}]]></ee:set-payload>
+                </ee:message>
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus">401</ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+        </on-error-continue>
+        
+        <on-error-continue type="HTTP:NOT_FOUND">
+            <ee:transform doc:name="Transform Not Found Error">
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    error: {
+        code: "RESOURCE_NOT_FOUND",
+        message: "The requested resource was not found.",
+        timestamp: now(),
+        correlationId: correlationId
+    }
+}]]></ee:set-payload>
+                </ee:message>
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+        </on-error-continue>
+        
+        <on-error-continue type="HTTP:TIMEOUT">
+            <ee:transform doc:name="Transform Timeout Error">
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    error: {
+        code: "TIMEOUT",
+        message: "Request to Oracle Fusion timed out.",
+        timestamp: now(),
+        correlationId: correlationId
+    }
+}]]></ee:set-payload>
+                </ee:message>
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus">504</ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+        </on-error-continue>
+        
+        <on-error-propagate type="ANY">
+            <logger level="ERROR" message='#["Error: " ++ error.description ++ " | CorrelationId: " ++ correlationId]'/>
+            <ee:transform doc:name="Transform Generic Error">
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    error: {
+        code: "INTERNAL_ERROR",
+        message: "An unexpected error occurred.",
+        timestamp: now(),
+        correlationId: correlationId
+    }
+}]]></ee:set-payload>
+                </ee:message>
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus">500</ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+        </on-error-propagate>
+    </error-handler>
+
+    <!-- Main Flow: Get Employees -->
+    <flow name="get-employees-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/v1/employees" allowedMethods="GET">
+            <http:response statusCode="#[vars.httpStatus default 200]"/>
+        </http:listener>
+        
+        <set-variable variableName="startTime" value="#[now()]" doc:name="Set Start Time"/>
+        
+        <!-- Extract Query Parameters -->
+        <ee:transform doc:name="Extract Query Parameters">
+            <ee:variables>
+                <ee:set-variable variableName="queryParams"><![CDATA[%dw 2.0
+output application/java
+---
+{
+    offset: attributes.queryParams.offset default "0",
+    limit: attributes.queryParams.limit default "25",
+    filter: attributes.queryParams.filter default null,
+    orderBy: attributes.queryParams.orderBy default "PersonNumber",
+    fields: attributes.queryParams.fields default null
+}]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        
+        <!-- Check Cache -->
+        <set-variable variableName="cacheKey" 
+                     value='#["employees:" ++ vars.queryParams.offset ++ ":" ++ vars.queryParams.limit ++ ":" ++ (vars.queryParams.filter default "all")]' 
+                     doc:name="Set Cache Key"/>
+        
+        <try>
+            <os:retrieve key="#[vars.cacheKey]" objectStore="Oracle_Cache_Store" target="cachedResponse"/>
+            <choice>
+                <when expression="#[vars.cachedResponse != null]">
+                    <set-payload value="#[vars.cachedResponse]" doc:name="Use Cached Response"/>
+                    <logger level="INFO" message="Cache hit for key: #[vars.cacheKey]"/>
+                </when>
+                <otherwise>
+                    <flow-ref name="fetch-employees-from-oracle" doc:name="Fetch from Oracle"/>
+                    <os:store key="#[vars.cacheKey]" objectStore="Oracle_Cache_Store">
+                        <os:value>#[payload]</os:value>
+                    </os:store>
+                </otherwise>
+            </choice>
+            <error-handler>
+                <on-error-continue>
+                    <logger level="WARN" message="Cache operation failed, fetching from source"/>
+                    <flow-ref name="fetch-employees-from-oracle" doc:name="Fetch from Oracle"/>
+                </on-error-continue>
+            </error-handler>
+        </try>
+        
+        <!-- Log Performance Metrics -->
+        <logger level="INFO" message='#[%dw 2.0
+output application/json
+---
+{
+    operation: "getEmployees",
+    executionTime: now() - vars.startTime,
+    recordCount: sizeOf(payload.items default []),
+    correlationId: correlationId
+}]'/>
+        
+        <error-handler ref="global-error-handler"/>
+    </flow>
+
+    <!-- Sub Flow: Fetch Employees from Oracle -->
+    <sub-flow name="fetch-employees-from-oracle">
+        <!-- Build Oracle Query String -->
+        <ee:transform doc:name="Build Query String">
+            <ee:variables>
+                <ee:set-variable variableName="oracleQuery"><![CDATA[%dw 2.0
+output application/java
+---
+{
+    path: "/hcmRestApi/resources/latest/workers",
+    queryParams: {
+        offset: vars.queryParams.offset,
+        limit: vars.queryParams.limit,
+        orderBy: vars.queryParams.orderBy,
+        (q: vars.queryParams.filter) if (vars.queryParams.filter != null),
+        (fields: vars.queryParams.fields) if (vars.queryParams.fields != null),
+        expand: "all",
+        onlyData: "true"
+    }
+}]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        
+        <!-- Call Oracle Fusion API -->
+        <http:request method="GET" 
+                     config-ref="Oracle_Fusion_OAuth_Config" 
+                     path="#[vars.oracleQuery.path]"
+                     doc:name="Call Oracle Fusion API">
+            <http:query-params>#[vars.oracleQuery.queryParams]</http:query-params>
+            <http:headers>#[{
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "X-Correlation-ID": correlationId
+            }]</http:headers>
+        </http:request>
+        
+        <!-- Transform Response -->
+        <ee:transform doc:name="Transform Oracle Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    items: payload.items default [] map ((employee) -> {
+        employeeId: employee.PersonId,
+        employeeNumber: employee.PersonNumber,
+        displayName: employee.DisplayName,
+        firstName: employee.FirstName,
+        lastName: employee.LastName,
+        email: employee.WorkEmail,
+        jobTitle: employee.AssignmentName,
+        department: employee.DepartmentName,
+        status: employee.AssignmentStatus,
+        hireDate: employee.HireDate
+    }),
+    totalCount: payload.count default sizeOf(payload.items default []),
+    hasMore: payload.hasMore default false,
+    links: {
+        self: "/api/v1/employees?offset=" ++ vars.queryParams.offset ++ "&limit=" ++ vars.queryParams.limit,
+        (next: "/api/v1/employees?offset=" ++ (vars.queryParams.offset as Number + vars.queryParams.limit as Number) ++ "&limit=" ++ vars.queryParams.limit) if (payload.hasMore default false)
+    }
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </sub-flow>
+
+    <!-- Flow: Get Employee by ID -->
+    <flow name="get-employee-by-id-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/v1/employees/{employeeId}" allowedMethods="GET">
+            <http:response statusCode="#[vars.httpStatus default 200]"/>
+        </http:listener>
+        
+        <set-variable variableName="employeeId" value="#[attributes.uriParams.employeeId]" doc:name="Set Employee ID"/>
+        
+        <!-- Validate Employee ID -->
+        <choice>
+            <when expression="#[isEmpty(vars.employeeId) or vars.employeeId == null]">
+                <raise-error type="APP:INVALID_INPUT" description="Employee ID is required"/>
+            </when>
+        </choice>
+        
+        <!-- Check Cache -->
+        <set-variable variableName="cacheKey" value='#["employee:" ++ vars.employeeId]' doc:name="Set Cache Key"/>
+        
+        <try>
+            <os:retrieve key="#[vars.cacheKey]" objectStore="Oracle_Cache_Store" target="cachedEmployee"/>
+            <choice>
+                <when expression="#[vars.cachedEmployee != null]">
+                    <set-payload value="#[vars.cachedEmployee]" doc:name="Use Cached Employee"/>
+                </when>
+                <otherwise>
+                    <!-- Call Oracle Fusion API -->
+                    <http:request method="GET" 
+                                 config-ref="Oracle_Fusion_OAuth_Config" 
+                                 path="/hcmRestApi/resources/latest/workers/{personId}"
+                                 doc:name="Get Employee from Oracle">
+                        <http:uri-params>#[{personId: vars.employeeId}]</http:uri-params>
+                        <http:headers>#[{
+                            "Accept": "application/json",
+                            "X-Correlation-ID": correlationId
+                        }]</http:headers>
+                    </http:request>
+                    
+                    <!-- Transform Response -->
+                    <ee:transform doc:name="Transform Employee">
+                        <ee:message>
+                            <ee:set-payload resource="classpath://dataweave/employee-transformation.dwl"/>
+                        </ee:message>
+                    </ee:transform>
+                    
+                    <!-- Cache Response -->
+                    <os:store key="#[vars.cacheKey]" objectStore="Oracle_Cache_Store">
+                        <os:value>#[payload]</os:value>
+                    </os:store>
+                </otherwise>
+            </choice>
+            <error-handler>
+                <on-error-continue>
+                    <logger level="WARN" message="Cache operation failed"/>
+                </on-error-continue>
+            </error-handler>
+        </try>
+        
+        <error-handler ref="global-error-handler"/>
+    </flow>
+
+    <!-- Flow: Update Employee -->
+    <flow name="update-employee-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/v1/employees/{employeeId}" allowedMethods="PUT,PATCH">
+            <http:response statusCode="#[vars.httpStatus default 200]"/>
+        </http:listener>
+        
+        <set-variable variableName="employeeId" value="#[attributes.uriParams.employeeId]" doc:name="Set Employee ID"/>
+        <set-variable variableName="httpMethod" value="#[attributes.method]" doc:name="Set HTTP Method"/>
+        
+        <!-- Validate Input -->
+        <ee:transform doc:name="Validate and Transform Input">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    PersonId: vars.employeeId,
+    (Salary: payload.salary) if (payload.salary?),
+    (DepartmentId: payload.departmentId) if (payload.departmentId?),
+    (ManagerId: payload.managerId) if (payload.managerId?),
+    (AssignmentName: payload.jobTitle) if (payload.jobTitle?),
+    (AssignmentStatus: upper(payload.status)) if (payload.status?),
+    (WorkEmail: payload.email) if (payload.email?)
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        
+        <!-- Call Oracle Fusion API -->
+        <http:request method="#[if (vars.httpMethod == 'PUT') 'PUT' else 'PATCH']" 
+                     config-ref="Oracle_Fusion_OAuth_Config" 
+                     path="/hcmRestApi/resources/latest/workers/{personId}"
+                     doc:name="Update Employee in Oracle">
+            <http:uri-params>#[{personId: vars.employeeId}]</http:uri-params>
+            <http:headers>#[{
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "X-Correlation-ID": correlationId
+            }]</http:headers>
+        </http:request>
+        
+        <!-- Invalidate Cache -->
+        <os:remove key='#["employee:" ++ vars.employeeId]' objectStore="Oracle_Cache_Store"/>
+        <os:remove key='#["employees:*"]' objectStore="Oracle_Cache_Store"/>
+        
+        <!-- Transform Response -->
+        <ee:transform doc:name="Transform Update Response">
+            <ee:message>
+                <ee:set-payload resource="classpath://dataweave/employee-transformation.dwl"/>
+            </ee:message>
+        </ee:transform>
+        
+        <error-handler ref="global-error-handler"/>
+    </flow>
+
+    <!-- Flow: Health Check -->
+    <flow name="health-check-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/health" allowedMethods="GET">
+            <http:response statusCode="#[vars.httpStatus default 200]"/>
+        </http:listener>
+        
+        <parallel-foreach collection='#[["oracle-fusion", "cache-store"]]'>
+            <try>
+                <choice>
+                    <when expression='#[payload == "oracle-fusion"]'>
+                        <http:request method="GET" 
+                                     config-ref="Oracle_Fusion_OAuth_Config" 
+                                     path="/hcmRestApi/resources/latest"
+                                     responseTimeout="5000"/>
+                        <set-payload value='#[{service: "oracle-fusion", status: "UP"}]'/>
+                    </when>
+                    <when expression='#[payload == "cache-store"]'>
+                        <os:contains key="health-check-test" objectStore="Oracle_Cache_Store"/>
+                        <set-payload value='#[{service: "cache-store", status: "UP"}]'/>
+                    </when>
+                </choice>
+                <error-handler>
+                    <on-error-continue>
+                        <set-payload value='#[{service: payload, status: "DOWN", error: error.description}]'/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </parallel-foreach>
+        
+        <ee:transform doc:name="Build Health Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    status: if (payload some ($.status == "DOWN")) "DOWN" else "UP",
+    timestamp: now(),
+    services: payload,
+    version: "${api.version}",
+    environment: "${mule.env}"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+
+</mule>

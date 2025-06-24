@@ -1,0 +1,77 @@
+# MuleSoft specific
+.mule/
+target/
+.classpath
+.project
+.settings/
+velocity.log
+
+# Anypoint Studio
+.studio/
+.metadata/
+*.iml
+*.ipr
+*.iws
+
+# Maven
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# IDE specific
+.idea/
+*.sublime-workspace
+*.sublime-project
+.vscode/
+
+# OS specific
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Configuration files with sensitive data
+src/main/resources/config-local.yaml
+src/main/resources/secure-*.yaml
+*.jks
+*.p12
+*.pfx
+
+# Test output
+test-output/
+surefire-reports/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Build artifacts
+build/
+dist/
+out/
+
+# Node modules (if using npm for any tooling)
+node_modules/
+
+# Python virtual environments
+venv/
+env/
+.env
+
+# Credentials and secrets
+.env.local
+.env.*.local
+credentials.properties
+secrets.yaml

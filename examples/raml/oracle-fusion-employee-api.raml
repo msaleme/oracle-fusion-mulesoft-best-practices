@@ -1,0 +1,344 @@
+#%RAML 1.0
+title: Oracle Fusion Employee API
+version: v1
+baseUri: https://api.company.com/{version}
+mediaType: application/json
+
+traits:
+  secured:
+    headers:
+      Authorization:
+        description: Bearer token for authentication
+        type: string
+        required: true
+        example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  
+  pageable:
+    queryParameters:
+      offset:
+        type: integer
+        default: 0
+        description: Number of records to skip
+      limit:
+        type: integer
+        default: 25
+        maximum: 100
+        description: Maximum number of records to return
+  
+  filterable:
+    queryParameters:
+      filter:
+        type: string
+        required: false
+        description: Filter expression (e.g., "department eq 'Sales'")
+      orderBy:
+        type: string
+        required: false
+        description: Sort order (e.g., "hireDate desc")
+
+types:
+  Employee:
+    type: object
+    properties:
+      personId: 
+        type: integer
+        required: true
+      personNumber:
+        type: string
+        required: true
+      displayName:
+        type: string
+        required: true
+      firstName:
+        type: string
+      lastName:
+        type: string
+      emailAddress:
+        type: string
+        pattern: ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$
+      phoneNumber:
+        type: string
+      hireDate:
+        type: date-only
+      jobTitle:
+        type: string
+      departmentName:
+        type: string
+      managerName:
+        type: string
+      salary:
+        type: number
+      status:
+        type: string
+        enum: [ACTIVE, INACTIVE, TERMINATED]
+    example:
+      personId: 12345
+      personNumber: "EMP001"
+      displayName: "John Doe"
+      firstName: "John"
+      lastName: "Doe"
+      emailAddress: "john.doe@company.com"
+      phoneNumber: "+1-555-123-4567"
+      hireDate: "2020-01-15"
+      jobTitle: "Senior Software Engineer"
+      departmentName: "Engineering"
+      managerName: "Jane Smith"
+      salary: 95000
+      status: "ACTIVE"
+
+  EmployeeInput:
+    type: object
+    properties:
+      firstName:
+        type: string
+        required: true
+      lastName:
+        type: string
+        required: true
+      emailAddress:
+        type: string
+        required: true
+      hireDate:
+        type: date-only
+        required: true
+      jobTitle:
+        type: string
+        required: true
+      departmentId:
+        type: integer
+        required: true
+      managerId:
+        type: integer
+      salary:
+        type: number
+
+  Error:
+    type: object
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+      details:
+        type: string
+      timestamp:
+        type: datetime
+    example:
+      code: "EMP_NOT_FOUND"
+      message: "Employee not found"
+      details: "No employee found with ID 12345"
+      timestamp: "2024-01-15T10:30:00Z"
+
+  EmployeeCollection:
+    type: object
+    properties:
+      items:
+        type: Employee[]
+      totalCount:
+        type: integer
+      hasMore:
+        type: boolean
+      links:
+        type: object
+        properties:
+          self:
+            type: string
+          next:
+            type: string
+          previous:
+            type: string
+
+/employees:
+  is: [secured]
+  get:
+    is: [pageable, filterable]
+    description: Retrieve a list of employees
+    responses:
+      200:
+        body:
+          type: EmployeeCollection
+          example:
+            items:
+              - personId: 12345
+                personNumber: "EMP001"
+                displayName: "John Doe"
+                emailAddress: "john.doe@company.com"
+                status: "ACTIVE"
+            totalCount: 150
+            hasMore: true
+            links:
+              self: "/employees?offset=0&limit=25"
+              next: "/employees?offset=25&limit=25"
+      401:
+        body:
+          type: Error
+      500:
+        body:
+          type: Error
+  
+  post:
+    is: [secured]
+    description: Create a new employee
+    body:
+      type: EmployeeInput
+    responses:
+      201:
+        headers:
+          Location:
+            description: URL of the created employee
+            type: string
+        body:
+          type: Employee
+      400:
+        body:
+          type: Error
+      401:
+        body:
+          type: Error
+      409:
+        body:
+          type: Error
+          example:
+            code: "DUPLICATE_EMPLOYEE"
+            message: "Employee already exists"
+            details: "An employee with email john.doe@company.com already exists"
+
+  /{employeeId}:
+    is: [secured]
+    uriParameters:
+      employeeId:
+        type: integer
+        description: The employee's unique identifier
+    
+    get:
+      description: Retrieve a specific employee by ID
+      responses:
+        200:
+          body:
+            type: Employee
+        401:
+          body:
+            type: Error
+        404:
+          body:
+            type: Error
+    
+    put:
+      description: Update an existing employee
+      body:
+        type: EmployeeInput
+      responses:
+        200:
+          body:
+            type: Employee
+        400:
+          body:
+            type: Error
+        401:
+          body:
+            type: Error
+        404:
+          body:
+            type: Error
+    
+    patch:
+      description: Partially update an employee
+      body:
+        type: object
+        properties:
+          jobTitle?: string
+          departmentId?: integer
+          managerId?: integer
+          salary?: number
+          status?: string
+      responses:
+        200:
+          body:
+            type: Employee
+        400:
+          body:
+            type: Error
+        401:
+          body:
+            type: Error
+        404:
+          body:
+            type: Error
+    
+    delete:
+      description: Delete an employee (soft delete - sets status to TERMINATED)
+      responses:
+        204:
+          description: Employee successfully deleted
+        401:
+          body:
+            type: Error
+        404:
+          body:
+            type: Error
+
+/employees/search:
+  is: [secured]
+  post:
+    description: Search employees using advanced criteria
+    body:
+      type: object
+      properties:
+        departments:
+          type: string[]
+          description: List of department names
+        statuses:
+          type: string[]
+          description: List of employee statuses
+        hireDateFrom:
+          type: date-only
+        hireDateTo:
+          type: date-only
+        salaryMin:
+          type: number
+        salaryMax:
+          type: number
+      example:
+        departments: ["Engineering", "Sales"]
+        statuses: ["ACTIVE"]
+        hireDateFrom: "2020-01-01"
+        salaryMin: 50000
+    responses:
+      200:
+        body:
+          type: EmployeeCollection
+      400:
+        body:
+          type: Error
+      401:
+        body:
+          type: Error
+
+/employees/bulk:
+  is: [secured]
+  post:
+    description: Create multiple employees in a single request
+    body:
+      type: EmployeeInput[]
+      maxItems: 100
+    responses:
+      207:
+        description: Multi-status response
+        body:
+          type: object
+          properties:
+            successful:
+              type: Employee[]
+            failed:
+              type: object[]
+              properties:
+                input:
+                  type: EmployeeInput
+                error:
+                  type: Error
+      400:
+        body:
+          type: Error
+      401:
+        body:
+          type: Error
